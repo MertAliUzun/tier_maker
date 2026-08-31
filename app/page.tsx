@@ -677,6 +677,78 @@ export default function Page() {
     return cells
   }
 
+  function escapeCsvValue(value: string) {
+    if (
+      value.includes(',') ||
+      value.includes('"') ||
+      value.includes('\n')
+    ) {
+      return `"${value.replace(/"/g, '""')}"`
+    }
+  
+    return value
+  }
+  
+  function saveTierList() {
+    const header =
+      'name,image_url,tier,tier_order'
+  
+    const rows = images.map((item) => {
+      // Item'ın bulunduğu tier'ı bul
+      const tier = tiers.find(
+        (t) => t.id === item.tierId
+      )
+  
+      // Tier yoksa Unranked
+      const tierName =
+        tier?.name ?? 'unranked'
+  
+      // Tier'ın mevcut listedeki sırası
+      const tierOrder = tier
+        ? tiers.findIndex(
+            (t) => t.id === tier.id
+          )
+        : -1
+  
+      return [
+        escapeCsvValue(item.label),
+        escapeCsvValue(item.image!),
+        escapeCsvValue(tierName),
+        tierOrder.toString(),
+      ].join(',')
+    })
+  
+    const csv = [
+      header,
+      ...rows,
+    ].join('\n')
+  
+    const blob = new Blob(
+      [csv],
+      {
+        type: 'text/csv;charset=utf-8;',
+      }
+    )
+  
+    const url =
+      URL.createObjectURL(blob)
+  
+    const link =
+      document.createElement('a')
+  
+    link.href = url
+    link.download =
+      'tier-list.csv'
+  
+    document.body.appendChild(link)
+  
+    link.click()
+  
+    document.body.removeChild(link)
+  
+    URL.revokeObjectURL(url)
+  }
+
   function loadCsv(file?: File) {
     if (!file) {
       return
@@ -951,6 +1023,12 @@ export default function Page() {
                       ? 'My game collection'
                       : 'My everyday essentials'}
                   </h2>
+
+                  <button
+                    onClick={saveTierList}
+                  >
+                    Tier List'i Kaydet
+                  </button>
                 </div>
 
                 <span className="count-pill">
