@@ -189,12 +189,96 @@ function deleteUnranked() {
   setQuery('');
 }
 
+function parseCsvLine(line: string): string[] {
+  const cells: string[] = [];
+  let current = '';
+  let insideQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+
+    if (char === '"') {
+      // CSV'deki "" → "
+      if (insideQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        insideQuotes = !insideQuotes;
+      }
+    } else if (char === ',' && !insideQuotes) {
+      cells.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+
+  cells.push(current.trim());
+
+  return cells;
+}
+
 
   function reorderTier(targetId: string) { if (!tierDrag || tierDrag === targetId) return; setTiers((current) => { const next = [...current]; const from = next.findIndex((t) => t.id === tierDrag); const to = next.findIndex((t) => t.id === targetId); const [moved] = next.splice(from, 1); next.splice(to, 0, moved); return next }) }
   function addText() { const value = textRef.current?.value.trim(); if (!value) return; setItems((c) => [...c, { id: `t-${Date.now()}`, label: value, tierId: null }]); if (textRef.current) textRef.current.value = '' }
   function addTier() { const colors = ['#B38CFF', '#FF8AB7', '#7DC8FF', '#FF9364']; setTiers((c) => [...c, { id: `tier-${Date.now()}`, name: 'NEW', color: colors[c.length % colors.length] }]) }
   function reset() { setTiers(initialTiers); setItems(initialItems); setImages(initialImages); setQuery('') }
-  function loadCsv(file?: File) { if (!file) return; const reader = new FileReader(); reader.onload = () => { const lines = String(reader.result).split(/\r?\n/).filter(Boolean); if (!lines.length) return; const headers = lines[0].split(',').map((h) => h.trim().toLowerCase()); const nameIndex = headers.indexOf('name'); const imageIndex = headers.indexOf('image_url_medium'); if (nameIndex < 0 || imageIndex < 0) return; const imported = lines.slice(1).map((line, index) => { const cells = line.split(',').map((cell) => cell.trim().replace(/^"|"$/g, '')); return { id: `game-${Date.now()}-${index}`, label: cells[nameIndex] || 'Untitled', image: cells[imageIndex], tierId: null } }).filter((item) => item.label && item.image); setImages(imported) }; reader.readAsText(file) }
+  function loadCsv(file?: File) {
+    if (!file) return;
+  
+    const reader = new FileReader();
+  
+    reader.onload = () => {
+      const lines = String(reader.result)
+        .split(/\r?\n/)
+        .filter(Boolean);
+  
+      if (!lines.length) return;
+  
+      // Header
+      const headers = parseCsvLine(lines[0]).map((h) =>
+        h.replace(/^"|"$/g, '').trim().toLowerCase()
+      );
+  
+      const nameIndex = headers.indexOf('name');
+      const imageIndex = headers.indexOf('image_url_medium');
+  
+      console.log('name index:', nameIndex);
+      console.log('image index:', imageIndex);
+  
+      if (nameIndex === -1 || imageIndex === -1) {
+        console.error(
+          'CSV must contain name and image_url_medium columns'
+        );
+        return;
+      }
+  
+      const imported: Item[] = lines
+        .slice(1)
+        .map((line, index): Item | null => {
+          const cells = parseCsvLine(line);
+  
+          const name = cells[nameIndex]?.trim();
+          const image = cells[imageIndex]?.trim();
+  
+          if (!name || !image) {
+            return null;
+          }
+  
+          return {
+            id: `game-${Date.now()}-${index}`,
+            label: name,
+            image: image,
+            tierId: null,
+          };
+        })
+        .filter((item): item is Item => item !== null);
+  
+      setImages(imported);
+    };
+  
+    reader.readAsText(file);
+  }
   const modeLabel = mode === 'game' ? 'Game mode' : mode === 'image' ? 'Image mode' : 'Text mode'
   return <main className={dark ? 'app dark' : 'app'}>
     <header className="site-header">
