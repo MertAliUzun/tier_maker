@@ -18,7 +18,7 @@ const initialImages: Item[] = [
 ]
 
 export default function Page() {
-  const [mode, setMode] = useState<Mode>('text'); 
+  const [mode, setMode] = useState<Mode>('game'); 
   const [dark, setDark] = useState(true);  
 
   const [tiers, setTiers] = useState<Tier[]>(() => {
