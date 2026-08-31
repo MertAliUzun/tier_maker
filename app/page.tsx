@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { GripVertical, ImagePlus, Layers3, Moon, Palette, Plus, RotateCcw, Search, Share2, Sparkles, Sun, Type, Upload, X, Gamepad2 } from 'lucide-react'
 
 type Mode = 'text' | 'image' | 'game'
@@ -18,7 +18,84 @@ const initialImages: Item[] = [
 ]
 
 export default function Page() {
-  const [mode, setMode] = useState<Mode>('text'); const [dark, setDark] = useState(false); const [tiers, setTiers] = useState(initialTiers); const [items, setItems] = useState(initialItems); const [images, setImages] = useState(initialImages); const [dragged, setDragged] = useState<string | null>(null); const [tierDrag, setTierDrag] = useState<string | null>(null); const [query, setQuery] = useState(''); const textRef = useRef<HTMLInputElement>(null); const csvRef = useRef<HTMLInputElement>(null)
+  const [mode, setMode] = useState<Mode>('text'); 
+  const [dark, setDark] = useState(true);  
+
+  const [tiers, setTiers] = useState<Tier[]>(() => {
+    if (typeof window === 'undefined') {
+      return initialTiers;
+    }
+  
+    const saved = localStorage.getItem('tierly-tiers');
+  
+    if (!saved) {
+      return initialTiers;
+    }
+  
+    try {
+      return JSON.parse(saved);
+    } catch {
+      return initialTiers;
+    }
+  });
+
+  const [items, setItems] = useState<Item[]>(() => {
+    if (typeof window === 'undefined') {
+      return initialItems;
+    }
+  
+    const saved = localStorage.getItem('tierly-items');
+  
+    if (!saved) {
+      return initialItems;
+    }
+  
+    try {
+      return JSON.parse(saved);
+    } catch {
+      return initialItems;
+    }
+  });
+  
+  const [images, setImages] = useState<Item[]>(() => {
+    if (typeof window === 'undefined') {
+      return initialImages;
+    }
+  
+    const saved = localStorage.getItem('tierly-images');
+  
+    if (!saved) {
+      return initialImages;
+    }
+  
+    try {
+      return JSON.parse(saved);
+    } catch {
+      return initialImages;
+    }
+  });
+   useEffect(() => {
+    localStorage.setItem(
+      'tierly-images',
+      JSON.stringify(images)
+    );
+  }, [images]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      'tierly-tiers',
+      JSON.stringify(tiers)
+    );
+  }, [tiers]);
+  useEffect(() => {
+    localStorage.setItem(
+      'tierly-items',
+      JSON.stringify(items)
+    );
+  }, [items]);
+
+
+  const [dragged, setDragged] = useState<string | null>(null); const [tierDrag, setTierDrag] = useState<string | null>(null); const [query, setQuery] = useState(''); const textRef = useRef<HTMLInputElement>(null); const csvRef = useRef<HTMLInputElement>(null)
   const visibleItems = mode === 'text' ? items : images; const ranked = visibleItems.filter((item) => item.tierId).length
   const unranked = visibleItems.filter((item) => !item.tierId && item.label.toLowerCase().includes(query.toLowerCase()))
   const setCurrentItems = (fn: (current: Item[]) => Item[]) => mode === 'text' ? setItems(fn) : setImages(fn)
@@ -196,14 +273,19 @@ function handleDragEnd() {
                                   <h3>{mode === 'game' ? 'Game items' : 'Drag to place'}</h3></div>
                                   <span className="pool-count">{unranked.length} items</span></div>
                                   <div className="search-box"><Search /><input placeholder={mode === 'game' ? 'Search games...' : 'Search unranked items...'} value={query} onChange={(e) => setQuery(e.target.value)} /></div>
-                                  {mode === 'text' && <div className="add-text">
+                                  <div className={`item-pool ${mode !== 'text' ? 'image-pool' : ''}`}>{unranked.map((item) => <ItemCard key={item.id} item={item} mode={mode === 'text' ? 'text' : 'image'} onDragStart={() => setDragged(item.id)} onDragEnd={() => setDragged(null)} />)}
+                                      </div>
+                                  {mode === 'text' && <div className="add-text">              
                                     <input ref={textRef} placeholder="Add a new item..." onKeyDown={(e) => e.key === 'Enter' && addText()} />
                                     <button onClick={addText}><Plus /></button></div>}{mode === 'game' && <>
                                     <input ref={csvRef} type="file" accept=".csv,text/csv" hidden onChange={(e) => loadCsv(e.target.files?.[0])} />
                                     <button className="upload-button" onClick={() => csvRef.current?.click()}><Upload /> Upload CSV <span>name + image_url_medium</span></button></>}
                                     {mode === 'image' && <button className="upload-button"><Upload /> Upload images <span>PNG, JPG up to 10MB</span></button>}
-                                    <div className={`item-pool ${mode !== 'text' ? 'image-pool' : ''}`}>{unranked.map((item) => <ItemCard key={item.id} item={item} mode={mode === 'text' ? 'text' : 'image'} onDragStart={() => setDragged(item.id)} onDragEnd={() => setDragged(null)} />)}
-                                      </div></section></div></div></main>
+                                    
+                                      </section>
+                                      </div>
+                                      </div>
+                                      </main>
 }
 function ItemCard({
   item,
@@ -226,7 +308,14 @@ function ItemCard({
         mode === 'image' ? 'image-item' : 'text-item'
       }`}
       draggable
-      onDragStart={() => onDragStart(item.id)}
+      onDragStart={(e) => {
+        if (e.button !== 0) {
+          e.preventDefault();
+          return;
+        }
+      
+        onDragStart(item.id);
+      }}
       onDragEnd={onDragEnd}
       onDragOver={onDragOver}
       onDrop={onDrop}
