@@ -174,6 +174,22 @@ function handleDragEnd() {
   setDragged(null);
   lastDropTarget.current = null;
 }
+
+function deleteUnranked() {
+  if (mode === 'text') {
+    setItems((current) =>
+      current.filter((item) => item.tierId !== null)
+    );
+  } else {
+    setImages((current) =>
+      current.filter((item) => item.tierId !== null)
+    );
+  }
+
+  setQuery('');
+}
+
+
   function reorderTier(targetId: string) { if (!tierDrag || tierDrag === targetId) return; setTiers((current) => { const next = [...current]; const from = next.findIndex((t) => t.id === tierDrag); const to = next.findIndex((t) => t.id === targetId); const [moved] = next.splice(from, 1); next.splice(to, 0, moved); return next }) }
   function addText() { const value = textRef.current?.value.trim(); if (!value) return; setItems((c) => [...c, { id: `t-${Date.now()}`, label: value, tierId: null }]); if (textRef.current) textRef.current.value = '' }
   function addTier() { const colors = ['#B38CFF', '#FF8AB7', '#7DC8FF', '#FF9364']; setTiers((c) => [...c, { id: `tier-${Date.now()}`, name: 'NEW', color: colors[c.length % colors.length] }]) }
@@ -267,11 +283,21 @@ function handleDragEnd() {
                             />) : 
                               <span className="drop-hint">Drop items here</span>}</div></div> })}</div>
                               <button className="add-tier" onClick={addTier}><Plus /> Add tier</button></section>
-                              <section className="pool-card"><div className="pool-header">
+                              <section className="pool-card">
+                                <div className="pool-header">
                                 <div>
                                   <span className="section-kicker">UNRANKED</span>
                                   <h3>{mode === 'game' ? 'Game items' : 'Drag to place'}</h3></div>
-                                  <span className="pool-count">{unranked.length} items</span></div>
+                                  <span className="pool-count">{unranked.length} items</span>
+                                  <button
+                                      className="delete-unranked"
+                                      onClick={deleteUnranked}
+                                      disabled={unranked.length === 0}
+                                      title="Delete all unranked items"
+                                    >
+                                      <X />
+                                    </button>
+                                  </div>
                                   <div className="search-box"><Search /><input placeholder={mode === 'game' ? 'Search games...' : 'Search unranked items...'} value={query} onChange={(e) => setQuery(e.target.value)} /></div>
                                   <div className={`item-pool ${mode !== 'text' ? 'image-pool' : ''}`}>{unranked.map((item) => <ItemCard key={item.id} item={item} mode={mode === 'text' ? 'text' : 'image'} onDragStart={() => setDragged(item.id)} onDragEnd={() => setDragged(null)} />)}
                                       </div>
