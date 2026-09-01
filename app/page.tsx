@@ -105,6 +105,9 @@ const initialImages: Item[] = []
 export default function Page() {
   const [mode, setMode] = useState<Mode>('game')
   const [dark, setDark] = useState(true)
+  const [steamProfileUrl, setSteamProfileUrl] = useState("");
+  const [steamLoading, setSteamLoading] = useState(false);
+  const [steamError, setSteamError] = useState("");
 
   const [tiers, setTiers] = useState<Tier[]>(() => {
     if (typeof window === 'undefined') {
@@ -222,18 +225,7 @@ export default function Page() {
     }
   }
 
-  /*
-   * ---------------------------------------------------------
-   * COLLISION DETECTION
-   * ---------------------------------------------------------
-   *
-   * Önce gerçek item'ın üzerine gelinmiş mi bakıyoruz.
-   *
-   * Eğer item'ın üzerine gelinmediyse tier-drop-* alanını
-   * kullanıyoruz.
-   *
-   * Bu özellikle BOŞ tier'ların çalışmasını sağlıyor.
-   */
+  
   const collisionDetectionStrategy: CollisionDetection = (
     args
   ) => {
@@ -369,19 +361,6 @@ export default function Page() {
         return next
       }
 
-      /*
-       * -----------------------------------------------------
-       * DROP DIRECTLY ON TIER
-       * -----------------------------------------------------
-       *
-       * ÖNEMLİ:
-       *
-       * Boş tier'da üzerinde item olmadığı için
-       * over.id'nin tier-drop-X olması gerekiyor.
-       *
-       * Artık .drop-zone doğrudan bu droppable alan.
-       */
-
       if (overId.startsWith('tier-drop-')) {
         const targetTierId =
           overId.replace('tier-drop-', '')
@@ -405,18 +384,6 @@ export default function Page() {
         )
 
         moved.tierId = targetTierId
-
-        /*
-         * Hedef tier'ın son item'ını bul.
-         *
-         * Böylece:
-         *
-         * S: A B
-         *
-         * item'i S'ye bırakırsak:
-         *
-         * S: A B item
-         */
 
         let insertIndex = next.length
 
@@ -482,15 +449,6 @@ export default function Page() {
           overIndex
         )
       }
-
-      /*
-       * -----------------------------------------------------
-       * DIFFERENT TIER
-       * -----------------------------------------------------
-       *
-       * Item, üzerine bıraktığımız item'ın
-       * tier'ına gider.
-       */
 
       const next = [...current]
 
@@ -587,11 +545,45 @@ export default function Page() {
     ])
   }
 
-  /*
-   * ---------------------------------------------------------
-   * RESET
-   * ---------------------------------------------------------
-   */
+  const importSteamGames = async () => {
+    setSteamError("");
+    setSteamLoading(true);
+  
+    try {
+      const response = await fetch("/api/steam/games", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          profileUrl: steamProfileUrl,
+        }),
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        setSteamError(data.message || data.error || "Steam import failed.");
+        return;
+      }
+
+      
+      const steamGames: Item[] = data.items;
+
+      setImages(steamGames);
+      console.log("Steam games:", data.items);
+  
+      // Burada mevcut unranked item state'ine ekleyeceğiz.
+      // Örneğin:
+      // setItems(prev => [...prev, ...data.items]);
+  
+    } catch (error) {
+      console.error(error);
+      setSteamError("Something went wrong while importing Steam games.");
+    } finally {
+      setSteamLoading(false);
+    }
+  };
 
   function reset() {
     setTiers(initialTiers)
@@ -1284,15 +1276,14 @@ export default function Page() {
                   </span>
 
                   <input
-  type="file"
-  accept=".csv"
-  onChange={(e) =>
-    loadTierListCsv(
-      e.target.files?.[0]
-    )
-  }
-/>
-
+                      type="file"
+                      accept=".csv"
+                      onChange={(e) =>
+                        loadTierListCsv(
+                          e.target.files?.[0]
+                        )
+                      }
+                    />
                   <h2>
                     {mode === 'game'
                       ? 'My game collection'
@@ -1493,6 +1484,27 @@ export default function Page() {
                       name + image_url_medium
                     </span>
                   </button>
+                  <div className="steam-import">
+  <input
+    type="text"
+    value={steamProfileUrl}
+    onChange={(e) => setSteamProfileUrl(e.target.value)}
+    placeholder="https://steamcommunity.com/profiles/76561198869280769/"
+  />
+
+  <button
+    onClick={importSteamGames}
+    disabled={steamLoading || !steamProfileUrl.trim()}
+  >
+    {steamLoading ? "Importing..." : "Import from Steam"}
+  </button>
+
+  {steamError && (
+    <p className="text-red-500">
+      {steamError}
+    </p>
+  )}
+</div>
                 </>
               )}
 
@@ -1778,6 +1790,8 @@ function ItemCard({
     id: item.id,
   })
 
+  const [imageError, setImageError] = useState(false)
+
   const style = {
     transform:
       CSS.Transform.toString(
@@ -1802,10 +1816,11 @@ function ItemCard({
           : 'text-item'
       }`}
     >
-      {item.image ? (
+      {item.image && !imageError ? (
         <img
           src={item.image}
           alt={item.label}
+          onError={() => setImageError(true)}
         />
       ) : (
         <span>
