@@ -691,7 +691,7 @@ export default function Page() {
   
   function saveTierList() {
     const header =
-      'name,image_url,tier,tier_order'
+      'name,image_url,tier,tier_order, tier_color'
   
     const rows = images.map((item) => {
       // Item'ın bulunduğu tier'ı bul
@@ -715,6 +715,7 @@ export default function Page() {
         escapeCsvValue(item.image!),
         escapeCsvValue(tierName),
         tierOrder.toString(),
+        escapeCsvValue(tier?.color ?? ''),
       ].join(',')
     })
   
@@ -747,6 +748,270 @@ export default function Page() {
     document.body.removeChild(link)
   
     URL.revokeObjectURL(url)
+  }
+
+  function loadTierListCsv(file?: File) {
+    if (!file) {
+      return
+    }
+  
+    const reader = new FileReader()
+  
+    reader.onload = () => {
+      const text = String(reader.result)
+  
+      const lines = text
+        .split(/\r?\n/)
+        .filter((line) => line.trim() !== '')
+  
+      if (lines.length < 2) {
+        console.error('CSV is empty or contains no data')
+        return
+      }
+  
+      // -----------------------------
+      // HEADERS
+      // -----------------------------
+  
+      const headers = parseCsvLine(lines[0]).map(
+        (header) =>
+          header
+            .replace(/^"|"$/g, '')
+            .trim()
+            .toLowerCase()
+      )
+  
+      const nameIndex = headers.indexOf('name')
+      const imageIndex = headers.indexOf('image_url')
+      const tierIndex = headers.indexOf('tier')
+      const tierOrderIndex =
+        headers.indexOf('tier_order')
+      const tierColorIndex =
+        headers.indexOf('tier_color')
+  
+      if (
+        nameIndex === -1 ||
+        imageIndex === -1 ||
+        tierIndex === -1 ||
+        tierOrderIndex === -1
+      ) {
+        console.error(
+          'CSV must contain name, image_url, tier and tier_order columns'
+        )
+        return
+      }
+  
+      // -----------------------------
+      // CSV SATIRLARINI OKU
+      // -----------------------------
+  
+      type CsvItem = {
+        name: string
+        image: string
+        tier: string
+        tierOrder: number
+        tierColor: string
+      }
+  
+      const csvItems: CsvItem[] = []
+  
+      for (const line of lines.slice(1)) {
+        const cells = parseCsvLine(line)
+  
+        const name =
+          cells[nameIndex]
+            ?.trim()
+            .replace(/^"|"$/g, '')
+  
+        const image =
+          cells[imageIndex]
+            ?.trim()
+            .replace(/^"|"$/g, '')
+  
+        const tier =
+          cells[tierIndex]
+            ?.trim()
+            .replace(/^"|"$/g, '')
+  
+        const tierOrderString =
+          cells[tierOrderIndex]
+            ?.trim()
+            .replace(/^"|"$/g, '')
+
+        const tierColor =
+        tierColorIndex !== -1
+          ? cells[tierColorIndex]
+              ?.trim()
+              .replace(/^"|"$/g, '')
+          : ''
+  
+        if (!name || !image) {
+          continue
+        }
+  
+        const tierOrder =
+          Number.parseInt(
+            tierOrderString,
+            10
+          )
+  
+          csvItems.push({
+            name,
+            image,
+            tier: tier || 'unranked',
+            tierOrder:
+              Number.isNaN(tierOrder)
+                ? -1
+                : tierOrder,
+            tierColor: tierColor || '',
+          })
+      }
+  
+      if (!csvItems.length) {
+        console.error(
+          'No valid items found in CSV'
+        )
+        return
+      }
+  
+      // -----------------------------
+      // CSV'DEKİ TIERLARI ÇIKAR
+      // -----------------------------
+  
+      const tierMap = new Map<
+        string,
+        number
+      >()
+  
+      for (const item of csvItems) {
+        const tierName =
+          item.tier.trim()
+  
+        if (
+          !tierName ||
+          tierName.toLowerCase() ===
+            'unranked'
+        ) {
+          continue
+        }
+  
+        const existingOrder =
+          tierMap.get(tierName)
+  
+        // Aynı tier birden fazla item'da
+        // bulunabilir. İlk order'ı koruyoruz.
+        if (
+          existingOrder === undefined ||
+          item.tierOrder < existingOrder
+        ) {
+          tierMap.set(
+            tierName,
+            item.tierOrder
+          )
+        }
+      }
+  
+      // -----------------------------
+      // TIERLARI SIRALA
+      // -----------------------------
+  
+      const sortedTierNames =
+        Array.from(
+          tierMap.entries()
+        )
+          .sort(
+            ([, orderA], [, orderB]) =>
+              orderA - orderB
+          )
+          .map(
+            ([name]) => name
+          )
+  
+      // -----------------------------
+      // YENİ TIERLARI OLUŞTUR
+      // -----------------------------
+  
+      const newTiers = sortedTierNames.map(
+        (name, index) => {
+          const csvTier = csvItems.find(
+            (item) =>
+              item.tier
+                .trim()
+                .toLowerCase() ===
+              name
+                .trim()
+                .toLowerCase()
+          )
+      
+          return {
+            id:
+              `tier-${Date.now()}-${index}`,
+      
+            name,
+      
+            color:
+              csvTier?.tierColor ||
+              '#FF6B57',
+          }
+        }
+      )
+  
+      // -----------------------------
+      // TIER NAME → TIER ID
+      // -----------------------------
+  
+      const tierNameToId =
+        new Map<string, string>()
+  
+      newTiers.forEach((tier) => {
+        tierNameToId.set(
+          tier.name.trim().toLowerCase(),
+          tier.id
+        )
+      })
+  
+      // -----------------------------
+      // ITEMLARI OLUŞTUR
+      // -----------------------------
+  
+      const imported: Item[] =
+        csvItems.map(
+          (item, index) => {
+            const tierName =
+              item.tier
+                .trim()
+                .toLowerCase()
+  
+            const tierId =
+              tierName ===
+                'unranked'
+                ? null
+                : tierNameToId.get(
+                    tierName
+                  ) ?? null
+  
+            return {
+              id:
+                `game-${Date.now()}-${index}`,
+  
+              label: item.name,
+  
+              image: item.image,
+  
+              tierId,
+            }
+          }
+        )
+  
+      // -----------------------------
+      // STATE'LERİ GÜNCELLE
+      // -----------------------------
+  
+      setTiers(newTiers)
+      setImages(imported)
+    }
+  
+    reader.readAsText(file)
   }
 
   function loadCsv(file?: File) {
@@ -1018,6 +1283,16 @@ export default function Page() {
                     {modeLabel.toUpperCase()}
                   </span>
 
+                  <input
+  type="file"
+  accept=".csv"
+  onChange={(e) =>
+    loadTierListCsv(
+      e.target.files?.[0]
+    )
+  }
+/>
+
                   <h2>
                     {mode === 'game'
                       ? 'My game collection'
@@ -1029,6 +1304,7 @@ export default function Page() {
                   >
                     Tier List'i Kaydet
                   </button>
+                  
                 </div>
 
                 <span className="count-pill">
