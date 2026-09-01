@@ -2,7 +2,86 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { profileUrl } = await request.json();
+    const body = await request.json();
+
+    // ==========================================
+    // MANUAL GAME IMPORT
+    // ==========================================
+      if (body.mode === "manual") {
+        const { gameName } = body;
+      
+        if (!gameName?.trim()) {
+          return NextResponse.json(
+            { error: "Game name is required." },
+            { status: 400 }
+          );
+        }
+      
+        const searchUrl =
+          `https://store.steampowered.com/api/storesearch/` +
+          `?term=${encodeURIComponent(gameName.trim())}` +
+          `&l=english` +
+          `&cc=us`;
+      
+        const searchResponse = await fetch(searchUrl, {
+          headers: {
+            "User-Agent": "Mozilla/5.0",
+          },
+          cache: "no-store",
+        });
+      
+        if (!searchResponse.ok) {
+          console.error(
+            "Steam Store search failed:",
+            searchResponse.status,
+            searchResponse.statusText
+          );
+      
+          return NextResponse.json(
+            {
+              error: "STEAM_SEARCH_FAILED",
+              message: "Failed to search Steam.",
+            },
+            { status: 502 }
+          );
+        }
+      
+        const searchData = await searchResponse.json();
+      
+        const games = searchData?.items ?? [];
+      
+        if (games.length === 0) {
+          return NextResponse.json(
+            {
+              error: "GAME_NOT_FOUND",
+              message: "Game not found on Steam.",
+            },
+            { status: 404 }
+          );
+        }
+      
+        const game = games[0];
+      
+        const appid = game.id;
+      
+        const item = {
+          id: String(appid),
+          label: game.name,
+          image: `https://cdn.cloudflare.steamstatic.com/steam/apps/${appid}/library_600x900.jpg`,
+          tierId: null,
+        };
+      
+        return NextResponse.json({
+          item,
+        });
+      }
+
+    // ==========================================
+    // MEVCUT STEAM PROFILE IMPORT
+    // ==========================================
+
+    const { profileUrl } = body;
+
     const apiKey = process.env.STEAM_API_KEY;
 
     if (!profileUrl || !apiKey) {

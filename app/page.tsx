@@ -108,6 +108,9 @@ export default function Page() {
   const [steamProfileUrl, setSteamProfileUrl] = useState("");
   const [steamLoading, setSteamLoading] = useState(false);
   const [steamError, setSteamError] = useState("");
+  const [manualGameName, setManualGameName] = useState("");
+  const [manualLoading, setManualLoading] = useState(false);
+  const [manualError, setManualError] = useState("");
 
   const [tiers, setTiers] = useState<Tier[]>(() => {
     if (typeof window === 'undefined') {
@@ -544,6 +547,57 @@ export default function Page() {
       },
     ])
   }
+
+  const importManualGame = async () => {
+    if (!manualGameName.trim()) return;
+  
+    setManualError("");
+    setManualLoading(true);
+  
+    try {
+      const response = await fetch("/api/steam/games", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          mode: "manual",
+          gameName: manualGameName.trim(),
+        }),
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        setManualError(
+          data.message ||
+            data.error ||
+            "Game import failed."
+        );
+        return;
+      }
+  
+      const item: Item = data.item;
+  
+      // Mevcut oyunların yanına ekle
+      setImages((prev) => {
+        // Aynı oyun zaten varsa tekrar ekleme
+        if (prev.some((existing) => existing.id === item.id)) {
+          return prev;
+        }
+  
+        return [...prev, item];
+      });
+  
+      // Input'u temizle
+      setManualGameName("");
+    } catch (error) {
+      console.error(error);
+      setManualError("Failed to import game.");
+    } finally {
+      setManualLoading(false);
+    }
+  };
 
   const importSteamGames = async () => {
     setSteamError("");
@@ -1550,6 +1604,62 @@ export default function Page() {
     </div>
 
   </div>
+  {/* Manual */}
+<div className="import-option manual-option">
+  <div className="import-option-header">
+    <div className="import-option-icon">
+      ✎
+    </div>
+
+    <div>
+      <h4>Manual</h4>
+      <p>Add a game by name</p>
+    </div>
+  </div>
+
+  <div className="manual-import-form">
+    <input
+      type="text"
+      value={manualGameName}
+      onChange={(e) => {
+        setManualGameName(e.target.value);
+        setManualError("");
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          importManualGame();
+        }
+      }}
+      placeholder="Game name"
+    />
+
+    <button
+      onClick={importManualGame}
+      disabled={
+        manualLoading ||
+        !manualGameName.trim()
+      }
+    >
+      {manualLoading ? (
+        <>
+          <span className="steam-spinner" />
+          Searching...
+        </>
+      ) : (
+        <>
+          <span>+</span>
+          Add
+        </>
+      )}
+    </button>
+  </div>
+
+  {manualError && (
+    <p className="steam-error">
+      {manualError}
+    </p>
+  )}
+</div>
 </div>
                 </>
               )}

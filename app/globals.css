@@ -718,6 +718,70 @@ button { cursor: pointer; }
   animation: steam-spin 0.7s linear infinite;
 }
 
+/* MANUAL */
+
+.manual-import-form {
+  display: flex;
+  gap: 8px;
+}
+
+.manual-import-form input {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  padding: 0 11px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  outline: none;
+  background: rgba(0, 0, 0, 0.25);
+  color: white;
+  font-size: 12px;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.manual-import-form input::placeholder {
+  color: rgba(255, 255, 255, 0.28);
+}
+
+.manual-import-form input:focus {
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.04);
+}
+
+.manual-import-form button {
+  height: 40px;
+  padding: 0 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 8px;
+  background: #1a9fff;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    transform 0.15s;
+}
+
+.manual-import-form button:hover:not(:disabled) {
+  background: #2aa8ff;
+  transform: translateY(-1px);
+}
+
+.manual-import-form button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 @keyframes steam-spin {
   to {
     transform: rotate(360deg);
@@ -863,6 +927,12 @@ button { cursor: pointer; }
     flex: 1;
     padding: 0 10px;
     font-size: 12px;
+  }
+
+  .import-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
   }
 }
 .pool-card { padding: 20px; }.pool-header h3 { font-size: 18px; }.image-pool .image-item { width: 90px; height: 120px; }.add-text { display: flex; overflow: hidden; }.add-text input { border: 0; outline: 0; min-width: 0; padding: 10px; flex: 1; font-size: 12px; background: #fafaf8; }.add-text button { display: flex; align-items: center; justify-content: center; border: 0; border-left: 1px solid #e1e2dc; background: #f3f3ed; width: 38px; }.add-text svg { width: 15px; }.upload-button { width: 100%; border: 1px dashed #c8cbc2; border-radius: 8px; background: #fafaf8; color: #777d74; padding: 11px; font-size: 12px; display: flex; justify-content: center; gap: 8px; align-items: center; }.upload-button svg { width: 15px; }.upload-button span { color: #a6aaa2; font-size: 10px; margin-left: auto; }.tip-card { margin-top: 14px; padding: 18px; display: flex; gap: 12px; background: #eaf3bd; border-color: #d9e8a0; }.tip-icon { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: #d7f35f; flex: 0 0 auto; }.tip-icon svg { width: 15px; }.tip-card h3 { font-size: 13px; }.tip-card p, .shortcut-card p { color: #68705f; font-size: 12px; line-height: 1.5; margin: 6px 0 0; }.shortcut-card { margin-top: 14px; padding: 17px; display: flex; justify-content: space-between; align-items: end; }.shortcut-card svg { width: 21px; color: #9ca69a; }
