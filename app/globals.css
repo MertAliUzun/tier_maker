@@ -414,6 +414,457 @@ button { cursor: pointer; }
     background 0.2s ease,
     box-shadow 0.2s ease;
 }*/
+.import-games {
+  width: 100%;
+  max-width: 900px;
+  margin: 24px auto;
+  padding: 22px;
+
+  box-sizing: border-box;
+
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  border-radius: 16px;
+
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.18);
+
+  backdrop-filter: blur(12px);
+}
+
+.import-games-header {
+  margin-bottom: 18px;
+}
+
+.import-games-header h3 {
+  margin: 0;
+
+  font-size: 17px;
+  font-weight: 600;
+
+  color: white;
+}
+
+.import-games-header p {
+  margin: 5px 0 0;
+
+  font-size: 13px;
+
+  color: rgba(255, 255, 255, 0.45);
+}
+
+
+/* OPTIONS */
+
+.import-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  gap: 12px;
+}
+
+
+/* OPTION */
+
+.import-option {
+  min-width: 0;
+
+  padding: 16px;
+
+  box-sizing: border-box;
+
+  border-radius: 13px;
+
+  background: rgba(0, 0, 0, 0.18);
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+}
+
+.import-option:hover {
+  background: rgba(255, 255, 255, 0.025);
+
+  border-color: rgba(255, 255, 255, 0.13);
+}
+
+
+/* OPTION HEADER */
+
+.import-option-header {
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  margin-bottom: 14px;
+}
+
+.import-option-icon {
+  width: 38px;
+  height: 38px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 10px;
+
+  background: rgba(255, 255, 255, 0.07);
+
+  color: rgba(255, 255, 255, 0.8);
+
+  font-size: 19px;
+}
+
+.import-option-header h4 {
+  margin: 0;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  color: white;
+}
+
+.import-option-header p {
+  margin: 3px 0 0;
+
+  font-size: 11px;
+
+  color: rgba(255, 255, 255, 0.4);
+}
+
+
+/* STEAM */
+
+.steam-import-form {
+  display: flex;
+
+  gap: 8px;
+}
+
+.steam-import-form input {
+  flex: 1;
+  min-width: 0;
+
+  height: 40px;
+
+  padding: 0 11px;
+
+  box-sizing: border-box;
+
+  border-radius: 8px;
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  outline: none;
+
+  background: rgba(0, 0, 0, 0.25);
+
+  color: white;
+
+  font-size: 12px;
+
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.steam-import-form input::placeholder {
+  color: rgba(255, 255, 255, 0.28);
+}
+
+.steam-import-form input:focus {
+  border-color: rgba(255, 255, 255, 0.25);
+
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.04);
+}
+
+.steam-import-form button {
+  height: 40px;
+
+  padding: 0 13px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  flex-shrink: 0;
+
+  border: none;
+
+  border-radius: 8px;
+
+  background: #1a9fff;
+
+  color: white;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s,
+    transform 0.15s;
+}
+
+.steam-import-form button:hover:not(:disabled) {
+  background: #2aa8ff;
+
+  transform: translateY(-1px);
+}
+
+.steam-import-form button:disabled {
+  opacity: 0.4;
+
+  cursor: not-allowed;
+}
+
+
+/* CSV */
+
+.csv-upload-button {
+  width: 100%;
+  height: 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  border-radius: 8px;
+
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+
+  background: rgba(255, 255, 255, 0.035);
+
+  color: rgba(255, 255, 255, 0.8);
+
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    transform 0.15s;
+}
+
+.csv-upload-button:hover {
+  background: rgba(255, 255, 255, 0.07);
+
+  border-color: rgba(255, 255, 255, 0.3);
+
+  transform: translateY(-1px);
+}
+
+.csv-format {
+  display: block;
+
+  margin-top: 8px;
+
+  font-size: 10px;
+
+  color: rgba(255, 255, 255, 0.3);
+
+  text-align: center;
+
+  font-family: monospace;
+}
+
+
+/* ERROR */
+
+.steam-error {
+  margin: 9px 0 0;
+
+  padding: 8px 10px;
+
+  border-radius: 7px;
+
+  background: rgba(255, 60, 60, 0.08);
+
+  border: 1px solid rgba(255, 60, 60, 0.15);
+
+  color: #ff7b7b;
+
+  font-size: 11px;
+}
+
+
+/* LOADING */
+
+.steam-spinner {
+  width: 12px;
+  height: 12px;
+
+  border: 2px solid rgba(255, 255, 255, 0.3);
+
+  border-top-color: white;
+
+  border-radius: 50%;
+
+  animation: steam-spin 0.7s linear infinite;
+}
+
+@keyframes steam-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.tier-list-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+
+  width: 100%;
+  margin: 20px auto;
+}
+
+.save-tier-button,
+.load-tier-button {
+  height: 44px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  padding: 0 16px;
+
+  box-sizing: border-box;
+
+  border-radius: 10px;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    transform 0.15s,
+    box-shadow 0.2s;
+}
+
+/* Kaydet */
+
+.save-tier-button {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  background: #0cb249;
+
+  color: white;
+}
+
+.save-tier-button:hover {
+  background: rgba(12, 178, 73, 0.5);
+
+  border-color: rgba(255, 255, 255, 0.2);
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 5px 18px rgba(0, 0, 0, 0.18);
+}
+
+/* Yükle */
+
+.load-tier-button {
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+
+  background: rgba(255, 255, 255, 0.035);
+
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.load-tier-button:hover {
+  background: rgba(255, 255, 255, 0.07);
+
+  border-color: rgba(255, 255, 255, 0.35);
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 5px 18px rgba(0, 0, 0, 0.15);
+}
+
+.save-tier-button:active,
+.load-tier-button:active {
+  transform: translateY(0);
+}
+
+@keyframes steam-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (max-width: 600px) {
+  .import-games {
+    padding: 16px;
+  }
+
+  .import-options {
+    grid-template-columns: 1fr;
+  }
+  .steam-import {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .steam-import-form {
+    flex-direction: column;
+  }
+
+  .steam-import-form button {
+    width: 100%;
+  }
+
+  .steam-import-header p {
+    display: none;
+  }
+  .upload-button {
+    min-height: 64px;
+    padding: 12px;
+  }
+
+  .upload-description {
+    display: none;
+  }
+
+  .upload-format {
+    display: none;
+  }
+
+  .upload-icon {
+    width: 38px;
+    height: 38px;
+  }
+  .tier-list-actions {
+    gap: 8px;
+  }
+
+  .save-tier-button,
+  .load-tier-button {
+    flex: 1;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+}
 .pool-card { padding: 20px; }.pool-header h3 { font-size: 18px; }.image-pool .image-item { width: 90px; height: 120px; }.add-text { display: flex; overflow: hidden; }.add-text input { border: 0; outline: 0; min-width: 0; padding: 10px; flex: 1; font-size: 12px; background: #fafaf8; }.add-text button { display: flex; align-items: center; justify-content: center; border: 0; border-left: 1px solid #e1e2dc; background: #f3f3ed; width: 38px; }.add-text svg { width: 15px; }.upload-button { width: 100%; border: 1px dashed #c8cbc2; border-radius: 8px; background: #fafaf8; color: #777d74; padding: 11px; font-size: 12px; display: flex; justify-content: center; gap: 8px; align-items: center; }.upload-button svg { width: 15px; }.upload-button span { color: #a6aaa2; font-size: 10px; margin-left: auto; }.tip-card { margin-top: 14px; padding: 18px; display: flex; gap: 12px; background: #eaf3bd; border-color: #d9e8a0; }.tip-icon { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: #d7f35f; flex: 0 0 auto; }.tip-icon svg { width: 15px; }.tip-card h3 { font-size: 13px; }.tip-card p, .shortcut-card p { color: #68705f; font-size: 12px; line-height: 1.5; margin: 6px 0 0; }.shortcut-card { margin-top: 14px; padding: 17px; display: flex; justify-content: space-between; align-items: end; }.shortcut-card svg { width: 21px; color: #9ca69a; }
 @media (max-width: 800px) { .workspace { padding-top: 38px; }.intro { align-items: start; flex-direction: column; }.intro-meta { padding: 0; }.modebar { margin-top: 34px; align-items: start; flex-direction: column; gap: 14px; }.side-rail { grid-template-columns: 1fr 1fr; }.pool-card { grid-column: 1 / -1; } }
 @media (max-width: 500px) { .site-header { height: 62px; }.workspace { padding-inline: 14px; }.toolbar-actions { width: 100%; }.toolbar-actions button { flex: 1; justify-content: center; }.board-card { padding: 14px; overflow: hidden; }.tier-label { width: 60px; min-width: 60px; }.tier-label input:not(.color-input) { font-size: 21px; }.side-rail { display: flex; flex-direction: column; }.tip-card, .shortcut-card { margin-top: 0; } }

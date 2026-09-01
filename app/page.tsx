@@ -1244,26 +1244,29 @@ export default function Page() {
             </div>
 
             <div className="toolbar-actions">
-              <button
-                className="subtle-button"
-                onClick={reset}
-              >
-                <RotateCcw />
-                Reset
-              </button>
+              <label className="load-tier-button">
+                <span>↑</span>
+                Tier List Yükle
 
+                <input
+                  type="file"
+                  accept=".csv"
+                  hidden
+                  onChange={(e) =>
+                    loadTierListCsv(
+                      e.target.files?.[0]
+                    )
+                  }
+                />
+              </label>
               <button
-                className="primary-button"
-                onClick={() =>
-                  alert(
-                    'Your tier list is ready to share!'
-                  )
-                }
+                className="save-tier-button"
+                onClick={saveTierList}
               >
-                <Share2 />
-                Share list
+                <span>↓</span>
+                Tier List'i Kaydet
               </button>
-            </div>
+            </div> 
           </div>
 
           <div className="content-grid">
@@ -1274,28 +1277,13 @@ export default function Page() {
                     THE BOARD ·{' '}
                     {modeLabel.toUpperCase()}
                   </span>
-
-                  <input
-                      type="file"
-                      accept=".csv"
-                      onChange={(e) =>
-                        loadTierListCsv(
-                          e.target.files?.[0]
-                        )
-                      }
-                    />
                   <h2>
                     {mode === 'game'
                       ? 'My game collection'
                       : 'My everyday essentials'}
                   </h2>
 
-                  <button
-                    onClick={saveTierList}
-                  >
-                    Tier List'i Kaydet
-                  </button>
-                  
+                      
                 </div>
 
                 <span className="count-pill">
@@ -1458,52 +1446,110 @@ export default function Page() {
 
               {mode === 'game' && (
                 <>
-                  <input
-                    ref={csvRef}
-                    type="file"
-                    accept=".csv,text/csv"
-                    hidden
-                    onChange={(e) =>
-                      loadCsv(
-                        e.target
-                          .files?.[0]
-                      )
-                    }
-                  />
+                  <div className="import-games">
+  <div className="import-games-header">
+    <div>
+      <h3>Import Games</h3>
+      <p>
+        Add games to your tier list from Steam or a CSV file.
+      </p>
+    </div>
+  </div>
 
-                  <button
-                    className="upload-button"
-                    onClick={() =>
-                      csvRef.current?.click()
-                    }
-                  >
-                    <Upload />
-                    Upload CSV
+  <div className="import-options">
 
-                    <span>
-                      name + image_url_medium
-                    </span>
-                  </button>
-                  <div className="steam-import">
-  <input
-    type="text"
-    value={steamProfileUrl}
-    onChange={(e) => setSteamProfileUrl(e.target.value)}
-    placeholder="https://steamcommunity.com/profiles/76561198869280769/"
-  />
+    {/* Steam */}
+    <div className="import-option steam-option">
+      <div className="import-option-header">
+        <div className="import-option-icon">
+          ♨
+        </div>
 
-  <button
-    onClick={importSteamGames}
-    disabled={steamLoading || !steamProfileUrl.trim()}
-  >
-    {steamLoading ? "Importing..." : "Import from Steam"}
-  </button>
+        <div>
+          <h4>Steam</h4>
+          <p>Import your Steam library</p>
+        </div>
+      </div>
 
-  {steamError && (
-    <p className="text-red-500">
-      {steamError}
-    </p>
-  )}
+      <div className="steam-import-form">
+        <input
+          type="text"
+          value={steamProfileUrl}
+          onChange={(e) =>
+            setSteamProfileUrl(e.target.value)
+          }
+          placeholder="Steam profile URL"
+        />
+
+        <button
+          onClick={importSteamGames}
+          disabled={
+            steamLoading ||
+            !steamProfileUrl.trim()
+          }
+        >
+          {steamLoading ? (
+            <>
+              <span className="steam-spinner" />
+              Importing...
+            </>
+          ) : (
+            <>
+              <span>↓</span>
+              Import
+            </>
+          )}
+        </button>
+      </div>
+
+      {steamError && (
+        <p className="steam-error">
+          {steamError}
+        </p>
+      )}
+    </div>
+
+    {/* CSV */}
+    <div className="import-option csv-option">
+
+      <div className="import-option-header">
+        <div className="import-option-icon">
+          <Upload size={19} />
+        </div>
+
+        <div>
+          <h4>CSV File</h4>
+          <p>Import games from a CSV</p>
+        </div>
+      </div>
+
+      <input
+        ref={csvRef}
+        type="file"
+        accept=".csv,text/csv"
+        hidden
+        onChange={(e) =>
+          loadCsv(e.target.files?.[0])
+        }
+      />
+
+      <button
+        className="csv-upload-button"
+        onClick={() =>
+          csvRef.current?.click()
+        }
+      >
+        <Upload size={17} />
+        Choose CSV File
+      </button>
+
+      <span className="csv-format">
+        name + image_url_medium
+      </span>
+
+    </div>
+
+  </div>
 </div>
                 </>
               )}
