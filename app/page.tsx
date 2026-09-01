@@ -37,6 +37,7 @@ import {
   Upload,
   X,
   Gamepad2,
+  Trash2
 } from 'lucide-react'
 
 type Mode = 'text' | 'image' | 'game'
@@ -275,6 +276,37 @@ export default function Page() {
 
     const activeId = String(active.id)
     const overId = String(over.id)
+
+    // =======================================================
+// DROP TO TRASH
+// =======================================================
+
+if (overId === "trash-drop-zone") {
+  const draggedTier = tiers.some(
+    (tier) => tier.id === activeId
+  );
+
+  // Tier çöp kutusuna bırakılamaz
+  if (draggedTier) {
+    return;
+  }
+
+  if (mode === "text") {
+    setItems((current) =>
+      current.filter(
+        (item) => item.id !== activeId
+      )
+    );
+  } else {
+    setImages((current) =>
+      current.filter(
+        (item) => item.id !== activeId
+      )
+    );
+  }
+
+  return;
+}
 
     /*
      * =======================================================
@@ -546,6 +578,37 @@ export default function Page() {
           ],
       },
     ])
+  }
+
+  function TrashDropZone({
+    activeId,
+    tiers,
+  }: {
+    activeId: string | null;
+    tiers: Tier[];
+  }) {
+    const { setNodeRef, isOver } = useDroppable({
+      id: "trash-drop-zone",
+    });
+  
+    const isTierDragging = tiers.some(
+      (tier) => tier.id === activeId
+    );
+  
+    const active = isOver && !isTierDragging;
+  
+    return (
+      <button
+        ref={setNodeRef}
+        type="button"
+        className={`delete-unranked ${
+          active ? "trash-active" : ""
+        }`}
+        title="Drag items here to delete"
+      >
+        <Trash2 size={17} />
+      </button>
+    );
   }
 
   const importManualGame = async () => {
@@ -1412,20 +1475,6 @@ export default function Page() {
                     {unranked.length}{' '}
                     items
                   </span>
-
-                  <button
-                    className="delete-unranked"
-                    onClick={
-                      deleteUnranked
-                    }
-                    disabled={
-                      unranked.length ===
-                      0
-                    }
-                    title="Delete all unranked items"
-                  >
-                    <X />
-                  </button>
                 </div>
               </div>
 
@@ -1617,41 +1666,48 @@ export default function Page() {
     </div>
   </div>
 
-  <div className="manual-import-form">
-    <input
-      type="text"
-      value={manualGameName}
-      onChange={(e) => {
-        setManualGameName(e.target.value);
-        setManualError("");
-      }}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          importManualGame();
-        }
-      }}
-      placeholder="Game name"
-    />
+  <div className="manual-import-row">
+    <div className="manual-import-form">
+      <input
+        type="text"
+        value={manualGameName}
+        onChange={(e) => {
+          setManualGameName(e.target.value);
+          setManualError("");
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            importManualGame();
+          }
+        }}
+        placeholder="Game name"
+      />
 
-    <button
-      onClick={importManualGame}
-      disabled={
-        manualLoading ||
-        !manualGameName.trim()
-      }
-    >
-      {manualLoading ? (
-        <>
-          <span className="steam-spinner" />
-          Searching...
-        </>
-      ) : (
-        <>
-          <span>+</span>
-          Add
-        </>
-      )}
-    </button>
+      <button
+        onClick={importManualGame}
+        disabled={
+          manualLoading ||
+          !manualGameName.trim()
+        }
+      >
+        {manualLoading ? (
+          <>
+            <span className="steam-spinner" />
+            Searching...
+          </>
+        ) : (
+          <>
+            <span>+</span>
+            Add
+          </>
+        )}
+      </button>
+    </div>
+
+    <TrashDropZone
+      activeId={activeId}
+      tiers={tiers}
+    />
   </div>
 
   {manualError && (

@@ -116,43 +116,44 @@
 }
 
 .delete-unranked {
-  width: 32px;
-  height: 32px;
-
+  width: 90px;
+  height: 120px;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
 
-  padding: 0;
-
-  border: 1px solid #e2e4e8;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
 
-  background: transparent;
-  color: #8b929d;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.45);
 
   cursor: pointer;
 
   transition:
-    background 0.2s ease,
-    color 0.2s ease,
-    border-color 0.2s ease;
+    background 0.2s,
+    border-color 0.2s,
+    color 0.2s,
+    transform 0.15s;
 }
 
-.delete-unranked:hover:not(:disabled) {
-  background: #fff0f0;
-  color: #e05252;
-  border-color: #f0b5b5;
+.delete-unranked:hover {
+  background: rgba(255, 70, 70, 0.1);
+  border-color: rgba(255, 70, 70, 0.25);
+  color: #ff6b6b;
 }
 
-.delete-unranked:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+.delete-unranked.trash-active {
+  background: rgba(168, 17, 17, 0.2) !important;
+  border-color: rgba(255, 70, 70, 0.55) !important;
+  color: #ff5555 !important;
+  transform: scale(1.08);
 }
 
-.delete-unranked svg {
-  width: 16px;
-  height: 16px;
+.delete-unranked.trash-active svg {
+  color: #ff5555 !important;
+  stroke: #ff5555 !important;
 }
 
 .app.dark .delete-unranked {
@@ -780,6 +781,24 @@ button { cursor: pointer; }
 .manual-import-form button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.manual-import-row {
+  display: flex;
+  align-items: center;
+  gap: 100px;
+}
+
+.manual-import-form {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.manual-import-form input {
+  flex: 1;
+  min-width: 0;
 }
 
 @keyframes steam-spin {
