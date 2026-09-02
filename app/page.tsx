@@ -39,6 +39,7 @@ import {
   Gamepad2,
   Trash2
 } from 'lucide-react'
+import { toPng } from 'html-to-image'
 
 type Mode = 'text' | 'image' | 'game'
 
@@ -112,6 +113,7 @@ export default function Page() {
   const [manualGameName, setManualGameName] = useState("");
   const [manualLoading, setManualLoading] = useState(false);
   const [manualError, setManualError] = useState("");
+  const [isCapturing, setIsCapturing] = useState(false)
 
   const [tiers, setTiers] = useState<Tier[]>(() => {
     if (typeof window === 'undefined') {
@@ -193,6 +195,7 @@ export default function Page() {
 
   const textRef = useRef<HTMLInputElement>(null)
   const csvRef = useRef<HTMLInputElement>(null)
+  const tierListRef = useRef<HTMLDivElement>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -609,6 +612,39 @@ if (overId === "trash-drop-zone") {
         <Trash2 size={17} />
       </button>
     );
+  }
+
+  const captureTierList = async () => {
+    if (!tierListRef.current || isCapturing) return
+  
+    setIsCapturing(true)
+  
+    // UI'ın loading ekranını göstermesine izin ver
+    await new Promise((resolve) => setTimeout(resolve, 100))
+  
+    try {
+      const element = tierListRef.current
+  
+      const dataUrl = await toPng(element, {
+        pixelRatio: 2,
+        width: element.scrollWidth,
+        height: element.scrollHeight,
+        style: {
+          maxHeight: 'none',
+          height: `${element.scrollHeight}px`,
+          overflow: 'visible',
+        },
+      })
+  
+      const link = document.createElement('a')
+      link.download = 'tier-list.png'
+      link.href = dataUrl
+      link.click()
+    } catch (error) {
+      console.error('Tier list export failed:', error)
+    } finally {
+      setIsCapturing(false)
+    }
   }
 
   const importManualGame = async () => {
@@ -1409,8 +1445,7 @@ if (overId === "trash-drop-zone") {
                   {visibleItems.length}
                 </span>
               </div>
-
-              <div className="tier-list">
+              <div ref={tierListRef} className="tier-list">
                 <SortableContext
                   items={tiers.map(
                     (tier) =>
@@ -1446,7 +1481,7 @@ if (overId === "trash-drop-zone") {
                   )}
                 </SortableContext>
               </div>
-
+              <div className= "tier-list-bottom-buttons">
               <button
                 className="add-tier"
                 onClick={addTier}
@@ -1454,6 +1489,20 @@ if (overId === "trash-drop-zone") {
                 <Plus />
                 Add tier
               </button>
+              <button
+                className="capture-button"
+                onClick={captureTierList}
+                disabled={isCapturing}
+              >
+                <span className="capture-button-icon">
+                  {isCapturing ? '⏳' : '↓'}
+                </span>
+
+                <span>
+                  {isCapturing ? 'Creating Image...' : 'Save as Image'}
+                </span>
+              </button>
+              </div>  
             </section>
 
             <section className="pool-card">
@@ -1735,8 +1784,27 @@ if (overId === "trash-drop-zone") {
             </section>
           </div>
         </div>
-      </main>
+        </main>
 
+        {isCapturing && (
+          <div className="capture-overlay">
+            <div className="capture-modal">
+              <div className="capture-spinner"></div>
+        
+              <div className="capture-modal-content">
+                <h3>Creating Your Image</h3>
+        
+                <p>
+                  Please wait while we create your tier list image.
+                </p>
+        
+                <span>
+                  This may take a moment...
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
       <DragOverlay>
         {activeItem ? (
           <div
