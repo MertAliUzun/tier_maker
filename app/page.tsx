@@ -37,11 +37,12 @@ import {
   Upload,
   X,
   Gamepad2,
-  Trash2
+  Trash2,
+  Film
 } from 'lucide-react'
 import { toPng } from 'html-to-image'
 
-type Mode = 'text' | 'image' | 'game'
+type Mode = 'text' | 'image' | 'game' | 'movie'
 
 type Item = {
   id: string
@@ -102,7 +103,8 @@ const initialItems: Item[] = [
   },
 ]
 
-const initialImages: Item[] = []
+  const initialImages: Item[] = []
+  const initialMovies: Item[] = []
 
 export default function Page() {
   const [mode, setMode] = useState<Mode>('game')
@@ -169,6 +171,24 @@ export default function Page() {
     }
   })
 
+  const [movies, setMovies] = useState<Item[]>(() => {
+    if (typeof window === 'undefined') {
+      return initialMovies
+    }
+
+    const saved = localStorage.getItem('tierly-movies')
+
+    if (!saved) {
+      return initialMovies
+    }
+
+    try {
+      return JSON.parse(saved)
+    } catch {
+      return initialMovies
+    }
+  })
+
   useEffect(() => {
     localStorage.setItem(
       'tierly-tiers',
@@ -190,6 +210,13 @@ export default function Page() {
     )
   }, [images])
 
+  useEffect(() => {
+    localStorage.setItem(
+      'tierly-movies',
+      JSON.stringify(movies)
+    )
+  }, [movies])
+
   const [query, setQuery] = useState('')
   const [activeId, setActiveId] = useState<string | null>(null)
 
@@ -208,7 +235,9 @@ export default function Page() {
   const visibleItems =
     mode === 'text'
       ? items
-      : images
+      : mode === 'movie'
+        ? movies
+        : images
 
   const ranked = visibleItems.filter(
     (item) => item.tierId !== null
@@ -227,6 +256,8 @@ export default function Page() {
   ) {
     if (mode === 'text') {
       setItems(updater)
+    } else if (mode === 'movie') {
+      setMovies(updater)
     } else {
       setImages(updater)
     }
@@ -294,19 +325,11 @@ if (overId === "trash-drop-zone") {
     return;
   }
 
-  if (mode === "text") {
-    setItems((current) =>
-      current.filter(
-        (item) => item.id !== activeId
-      )
-    );
-  } else {
-    setImages((current) =>
-      current.filter(
-        (item) => item.id !== activeId
-      )
-    );
-  }
+  setCurrentItems((current) =>
+    current.filter(
+      (item) => item.id !== activeId
+    )
+  );
 
   return;
 }
@@ -739,10 +762,11 @@ if (overId === "trash-drop-zone") {
   };
 
   function reset() {
-    setTiers(initialTiers)
-    setItems(initialItems)
-    setImages(initialImages)
-    setQuery('')
+  setTiers(initialTiers)
+  setItems(initialItems)
+  setImages(initialImages)
+  setMovies(initialMovies)
+  setQuery('')
   }
 
   /*
@@ -752,21 +776,11 @@ if (overId === "trash-drop-zone") {
    */
 
   function deleteUnranked() {
-    if (mode === 'text') {
-      setItems((current) =>
-        current.filter(
-          (item) =>
-            item.tierId !== null
-        )
+    setCurrentItems((current) =>
+      current.filter(
+        (item) => item.tierId !== null
       )
-    } else {
-      setImages((current) =>
-        current.filter(
-          (item) =>
-            item.tierId !== null
-        )
-      )
-    }
+    )
 
     setQuery('')
   }
@@ -838,7 +852,7 @@ if (overId === "trash-drop-zone") {
     const header =
       'name,image_url,tier,tier_order, tier_color'
   
-    const rows = images.map((item) => {
+    const rows = visibleItems.map((item) => {
       // Item'ın bulunduğu tier'ı bul
       const tier = tiers.find(
         (t) => t.id === item.tierId
@@ -1153,7 +1167,11 @@ if (overId === "trash-drop-zone") {
       // -----------------------------
   
       setTiers(newTiers)
-      setImages(imported)
+      if (mode === 'movie') {
+        setMovies(imported)
+      } else {
+        setImages(imported)
+      }
     }
   
     reader.readAsText(file)
@@ -1189,20 +1207,19 @@ if (overId === "trash-drop-zone") {
               .toLowerCase()
         )
 
-      const nameIndex =
-        headers.indexOf('name')
+      const nameIndex = headers.indexOf(
+        mode === 'movie' ? 'movie name' : 'name'
+      )
 
-      const imageIndex =
-        headers.indexOf(
-          'image_url_medium'
-        )
+      const imageIndex = headers.indexOf(
+        mode === 'movie' ? 'image link' : 'image_url_medium'
+      )
 
-      if (
-        nameIndex === -1 ||
-        imageIndex === -1
-      ) {
+      if (nameIndex === -1 || imageIndex === -1) {
         console.error(
-          'CSV must contain name and image_url_medium columns'
+          mode === 'movie'
+            ? 'Movie CSV must contain movie name and image link columns'
+            : 'CSV must contain name and image_url_medium columns'
         )
         return
       }
@@ -1237,7 +1254,7 @@ if (overId === "trash-drop-zone") {
 
               return {
                 id:
-                  `game-${Date.now()}-${index}`,
+                  `${mode}-${Date.now()}-${index}`,
                 label: name,
                 image,
                 tierId: null,
@@ -1251,7 +1268,11 @@ if (overId === "trash-drop-zone") {
               item !== null
           )
 
-      setImages(imported)
+      if (mode === 'movie') {
+        setMovies(imported)
+      } else {
+        setImages(imported)
+      }
     }
 
     reader.readAsText(file)
@@ -1260,9 +1281,11 @@ if (overId === "trash-drop-zone") {
   const modeLabel =
     mode === 'game'
       ? 'Game mode'
-      : mode === 'image'
-        ? 'Image mode'
-        : 'Text mode'
+      : mode === 'movie'
+        ? 'Movie mode'
+        : mode === 'image'
+          ? 'Image mode'
+          : 'Text mode'
 
   const activeItem =
     visibleItems.find(
@@ -1394,6 +1417,20 @@ if (overId === "trash-drop-zone") {
                 <Gamepad2 />
                 Game mode
               </button>
+
+              <button
+                className={
+                  mode === 'movie'
+                    ? 'mode-active'
+                    : ''
+                }
+                onClick={() =>
+                  setMode('movie')
+                }
+              >
+                <Film />
+                Movie mode
+              </button>
             </div>
 
             <div className="toolbar-actions">
@@ -1433,7 +1470,9 @@ if (overId === "trash-drop-zone") {
                   <h2>
                     {mode === 'game'
                       ? 'My game collection'
-                      : 'My everyday essentials'}
+                      : mode === 'movie'
+                        ? 'My movie collection'
+                        : 'My everyday essentials'}
                   </h2>
 
                       
@@ -1515,7 +1554,9 @@ if (overId === "trash-drop-zone") {
                   <h3>
                     {mode === 'game'
                       ? 'Game items'
-                      : 'Drag to place'}
+                      : mode === 'movie'
+                        ? 'Movie items'
+                        : 'Drag to place'}
                   </h3>
                 </div>
 
@@ -1534,7 +1575,9 @@ if (overId === "trash-drop-zone") {
                   placeholder={
                     mode === 'game'
                       ? 'Search games...'
-                      : 'Search unranked items...'
+                      : mode === 'movie'
+                        ? 'Search movies...'
+                        : 'Search unranked items...'
                   }
                   value={query}
                   onChange={(e) =>
@@ -1767,6 +1810,49 @@ if (overId === "trash-drop-zone") {
 </div>
 </div>
                 </>
+              )}
+
+              {mode === 'movie' && (
+                <div className="import-games">
+                  <div className="import-games-header">
+                    <div>
+                      <h3>Import Movies</h3>
+                      <p>Import movies from a CSV file.</p>
+                    </div>
+                  </div>
+
+                  <div className="import-option csv-option">
+                    <div className="import-option-header">
+                      <div className="import-option-icon">
+                        <Upload size={19} />
+                      </div>
+                      <div>
+                        <h4>CSV File</h4>
+                        <p>Import your movie collection</p>
+                      </div>
+                    </div>
+
+                    <input
+                      ref={csvRef}
+                      type="file"
+                      accept=".csv,text/csv"
+                      hidden
+                      onChange={(e) => loadCsv(e.target.files?.[0])}
+                    />
+
+                    <button
+                      className="csv-upload-button"
+                      onClick={() => csvRef.current?.click()}
+                    >
+                      <Upload size={17} />
+                      Choose CSV File
+                    </button>
+
+                    <span className="csv-format">
+                      movie name + image link
+                    </span>
+                  </div>
+                </div>
               )}
 
               {mode === 'image' && (
