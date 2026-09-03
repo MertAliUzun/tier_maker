@@ -2007,14 +2007,30 @@ function TierRow({
             tier.color,
         }}
       >
-        <div
-          className="tier-grip"
-          {...listeners}
-        >
-          <GripVertical />
+        <div className="tier-label-toolbar">
+          <button
+            type="button"
+            className="tier-grip"
+            aria-label={`Drag to reorder ${tier.name} tier`}
+            title="Drag to reorder tier"
+            {...listeners}
+          >
+            <GripVertical aria-hidden="true" />
+          </button>
+
+          <button
+            type="button"
+            className="remove-tier"
+            aria-label={`Remove ${tier.name} tier`}
+            title="Remove tier"
+            onClick={onRemove}
+          >
+            <X aria-hidden="true" />
+          </button>
         </div>
 
         <input
+          aria-label={`${tier.name} tier name`}
           value={tier.name}
           onChange={(e) =>
             setTiers(
@@ -2041,7 +2057,8 @@ function TierRow({
           className="color-control"
           title="Change tier color"
         >
-          <Palette />
+          <Palette aria-hidden="true" />
+          <span className="sr-only">Change tier color</span>
 
           <input
             className="color-input"
@@ -2071,17 +2088,6 @@ function TierRow({
           />
         </label>
 
-        <button
-          className="remove-tier"
-          aria-label={
-            `Remove ${tier.name} tier`
-          }
-          onClick={
-            onRemove
-          }
-        >
-          <X />
-        </button>
       </div>
 
       {/*
