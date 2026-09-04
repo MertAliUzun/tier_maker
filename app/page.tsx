@@ -117,23 +117,53 @@ export default function Page() {
   const [manualError, setManualError] = useState("");
   const [isCapturing, setIsCapturing] = useState(false)
 
-  const [tiers, setTiers] = useState<Tier[]>(() => {
-    if (typeof window === 'undefined') {
-      return initialTiers
-    }
-
-    const saved = localStorage.getItem('tierly-tiers')
-
-    if (!saved) {
-      return initialTiers
-    }
-
-    try {
-      return JSON.parse(saved)
-    } catch {
-      return initialTiers
-    }
+  type ModeTiers = Record<Mode, Tier[]>
+  const emptyModeTiers = (): ModeTiers => ({
+    text: initialTiers.map((tier) => ({ ...tier })),
+    image: initialTiers.map((tier) => ({ ...tier })),
+    game: initialTiers.map((tier) => ({ ...tier })),
+    movie: initialTiers.map((tier) => ({ ...tier })),
   })
+
+  const [tiersByMode, setTiersByMode] = useState<ModeTiers>(() => {
+    if (typeof window === 'undefined') return emptyModeTiers()
+
+    const saved = localStorage.getItem('tierly-tiers-by-mode')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as Partial<ModeTiers>
+        const defaults = emptyModeTiers()
+        return {
+          text: parsed.text ?? defaults.text,
+          image: parsed.image ?? defaults.image,
+          game: parsed.game ?? defaults.game,
+          movie: parsed.movie ?? defaults.movie,
+        }
+      } catch {
+        // Fall through to the legacy migration below.
+      }
+    }
+
+    const legacy = localStorage.getItem('tierly-tiers')
+    if (legacy) {
+      try {
+        const legacyTiers = JSON.parse(legacy) as Tier[]
+        return { text: legacyTiers, image: legacyTiers, game: legacyTiers, movie: legacyTiers }
+      } catch {
+        // Use defaults when legacy data is invalid.
+      }
+    }
+
+    return emptyModeTiers()
+  })
+
+  const tiers = tiersByMode[mode]
+  const setTiers: React.Dispatch<React.SetStateAction<Tier[]>> = (updater) => {
+    setTiersByMode((current) => {
+      const next = typeof updater === 'function' ? updater(current[mode]) : updater
+      return { ...current, [mode]: next }
+    })
+  }
 
   const [items, setItems] = useState<Item[]>(() => {
     if (typeof window === 'undefined') {
@@ -191,10 +221,10 @@ export default function Page() {
 
   useEffect(() => {
     localStorage.setItem(
-      'tierly-tiers',
-      JSON.stringify(tiers)
+      'tierly-tiers-by-mode',
+      JSON.stringify(tiersByMode)
     )
-  }, [tiers])
+  }, [tiersByMode])
 
   useEffect(() => {
     localStorage.setItem(
@@ -762,11 +792,20 @@ if (overId === "trash-drop-zone") {
   };
 
   function reset() {
-  setTiers(initialTiers)
-  setItems(initialItems)
-  setImages(initialImages)
-  setMovies(initialMovies)
-  setQuery('')
+    setTiersByMode(emptyModeTiers())
+    setItems(initialItems)
+    setImages(initialImages)
+    setMovies(initialMovies)
+    setQuery('')
+  }
+
+  function removeTier(tierId: string) {
+    setTiers((current) => current.filter((tier) => tier.id !== tierId))
+    setCurrentItems((current) =>
+      current.map((item) =>
+        item.tierId === tierId ? { ...item, tierId: null } : item
+      )
+    )
   }
 
   /*
@@ -1503,18 +1542,7 @@ if (overId === "trash-drop-zone") {
                         setTiers={
                           setTiers
                         }
-                        onRemove={() =>
-                          setTiers(
-                            (current) =>
-                              current.filter(
-                                (
-                                  currentTier
-                                ) =>
-                                  currentTier.id !==
-                                  tier.id
-                              )
-                          )
-                        }
+                        onRemove={() => removeTier(tier.id)}
                       />
                     )
                   )}
