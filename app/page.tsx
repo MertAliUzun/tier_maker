@@ -841,12 +841,13 @@ if (overId === "trash-drop-zone") {
   };
 
   function reset() {
-    setTiersByMode(emptyModeTiers())
-    setItems(initialItems)
-    setImages(initialImages)
-    setMovies(initialMovies)
-    setAnime(initialAnime)
-    setQuery('')
+    setCurrentItems((current) => {
+      const rankedItems = current.filter(
+        (item) => item.tierId !== null
+      )
+  
+      return rankedItems
+    })
   }
 
   function removeTier(tierId: string) {
@@ -1657,6 +1658,17 @@ if (overId === "trash-drop-zone") {
                     {unranked.length}{' '}
                     items
                   </span>
+
+                  <button
+                    className="clear-unranked-button"
+                    onClick={reset}
+                    disabled={unranked.length === 0}
+                  >
+                    <span className="clear-unranked-button-icon">
+                      🗑
+                    </span>
+                    <span>Clear All</span>
+                  </button>
                 </div>
               </div>
 

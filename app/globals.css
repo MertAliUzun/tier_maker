@@ -111,8 +111,72 @@
 
 .pool-header-actions {
   display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.clear-unranked-button {
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  gap: 7px;
+
+  height: 34px;
+  padding: 0 12px;
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+
+  background: linear-gradient(
+    135deg,
+    #d63b3b,
+    #f05252
+  );
+
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 3px 10px rgba(214, 59, 59, 0.2);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.clear-unranked-button:hover {
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 5px 15px rgba(214, 59, 59, 0.3);
+}
+
+.clear-unranked-button:active {
+  transform: translateY(0);
+}
+
+.clear-unranked-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  transform: none;
+  box-shadow: none;
+}
+
+.clear-unranked-button-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 16px;
+  height: 16px;
+
+  font-size: 13px;
 }
 
 .delete-unranked {
