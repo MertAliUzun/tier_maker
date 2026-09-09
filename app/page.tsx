@@ -38,11 +38,13 @@ import {
   X,
   Gamepad2,
   Trash2,
-  Film
+  Film,
+  Clapperboard,
+  Sparkles
 } from 'lucide-react'
 import { toPng } from 'html-to-image'
 
-type Mode = 'text' | 'image' | 'game' | 'movie'
+type Mode = 'text' | 'image' | 'game' | 'movie' | 'anime'
 
 type Item = {
   id: string
@@ -105,6 +107,7 @@ const initialItems: Item[] = [
 
   const initialImages: Item[] = []
   const initialMovies: Item[] = []
+  const initialAnime: Item[] = []
 
 export default function Page() {
   const [mode, setMode] = useState<Mode>('game')
@@ -115,6 +118,19 @@ export default function Page() {
   const [manualGameName, setManualGameName] = useState("");
   const [manualLoading, setManualLoading] = useState(false);
   const [manualError, setManualError] = useState("");
+  const [myAnimeProfile, setMyAnimeProfile] = useState('')
+  const [myAnimeLoading, setMyAnimeLoading] = useState(false)
+  const [myAnimeError, setMyAnimeError] = useState('')
+  const [anime, setAnime] = useState<Item[]>(() => {
+    if (typeof window === 'undefined') return initialAnime
+    const saved = localStorage.getItem('tierly-anime')
+    if (!saved) return initialAnime
+    try {
+      return JSON.parse(saved)
+    } catch {
+      return initialAnime
+    }
+  })
   const [isCapturing, setIsCapturing] = useState(false)
 
   type ModeTiers = Record<Mode, Tier[]>
@@ -123,6 +139,7 @@ export default function Page() {
     image: initialTiers.map((tier) => ({ ...tier })),
     game: initialTiers.map((tier) => ({ ...tier })),
     movie: initialTiers.map((tier) => ({ ...tier })),
+    anime: initialTiers.map((tier) => ({ ...tier })),
   })
 
   const [tiersByMode, setTiersByMode] = useState<ModeTiers>(() => {
@@ -138,6 +155,7 @@ export default function Page() {
           image: parsed.image ?? defaults.image,
           game: parsed.game ?? defaults.game,
           movie: parsed.movie ?? defaults.movie,
+          anime: parsed.anime ?? defaults.anime,
         }
       } catch {
         // Fall through to the legacy migration below.
@@ -148,7 +166,7 @@ export default function Page() {
     if (legacy) {
       try {
         const legacyTiers = JSON.parse(legacy) as Tier[]
-        return { text: legacyTiers, image: legacyTiers, game: legacyTiers, movie: legacyTiers }
+        return { text: legacyTiers, image: legacyTiers, game: legacyTiers, movie: legacyTiers, anime: legacyTiers }
       } catch {
         // Use defaults when legacy data is invalid.
       }
@@ -247,6 +265,10 @@ export default function Page() {
     )
   }, [movies])
 
+  useEffect(() => {
+    localStorage.setItem('tierly-anime', JSON.stringify(anime))
+  }, [anime])
+
   const [query, setQuery] = useState('')
   const [activeId, setActiveId] = useState<string | null>(null)
 
@@ -267,7 +289,9 @@ export default function Page() {
       ? items
       : mode === 'movie'
         ? movies
-        : images
+        : mode === 'anime'
+          ? anime
+          : images
 
   const ranked = visibleItems.filter(
     (item) => item.tierId !== null
@@ -288,6 +312,8 @@ export default function Page() {
       setItems(updater)
     } else if (mode === 'movie') {
       setMovies(updater)
+    } else if (mode === 'anime') {
+      setAnime(updater)
     } else {
       setImages(updater)
     }
@@ -751,6 +777,24 @@ if (overId === "trash-drop-zone") {
     }
   };
 
+  const importMyAnimeList = async () => {
+    setMyAnimeError('')
+    const username = myAnimeProfile.trim().replace(/^https?:\/\/myanimelist\.net\/profile\//i, '').replace(/\/$/, '')
+    if (!username) return
+
+    setMyAnimeLoading(true)
+    try {
+      const response = await fetch(`/api/myanimelist/anime?username=${encodeURIComponent(username)}`)
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.message || 'MyAnimeList import failed.')
+      setAnime((current) => [...current, ...data.items])
+    } catch (error) {
+      setMyAnimeError(error instanceof Error ? error.message : 'MyAnimeList import failed.')
+    } finally {
+      setMyAnimeLoading(false)
+    }
+  }
+
   const importSteamGames = async () => {
     setSteamError("");
     setSteamLoading(true);
@@ -796,6 +840,7 @@ if (overId === "trash-drop-zone") {
     setItems(initialItems)
     setImages(initialImages)
     setMovies(initialMovies)
+    setAnime(initialAnime)
     setQuery('')
   }
 
@@ -1322,9 +1367,11 @@ if (overId === "trash-drop-zone") {
       ? 'Game mode'
       : mode === 'movie'
         ? 'Movie mode'
-        : mode === 'image'
-          ? 'Image mode'
-          : 'Text mode'
+        : mode === 'anime'
+          ? 'Anime mode'
+          : mode === 'image'
+            ? 'Image mode'
+            : 'Text mode'
 
   const activeItem =
     visibleItems.find(
@@ -1470,6 +1517,14 @@ if (overId === "trash-drop-zone") {
                 <Film />
                 Movie mode
               </button>
+
+              <button
+                className={mode === 'anime' ? 'mode-active' : ''}
+                onClick={() => setMode('anime')}
+              >
+                <Clapperboard />
+                Anime mode
+              </button>
             </div>
 
             <div className="toolbar-actions">
@@ -1511,7 +1566,9 @@ if (overId === "trash-drop-zone") {
                       ? 'My game collection'
                       : mode === 'movie'
                         ? 'My movie collection'
-                        : 'My everyday essentials'}
+                        : mode === 'anime'
+                          ? 'My anime collection'
+                          : 'My everyday essentials'}
                   </h2>
 
                       
@@ -1584,7 +1641,9 @@ if (overId === "trash-drop-zone") {
                       ? 'Game items'
                       : mode === 'movie'
                         ? 'Movie items'
-                        : 'Drag to place'}
+                        : mode === 'anime'
+                          ? 'Anime items'
+                          : 'Drag to place'}
                   </h3>
                 </div>
 
@@ -1605,7 +1664,9 @@ if (overId === "trash-drop-zone") {
                       ? 'Search games...'
                       : mode === 'movie'
                         ? 'Search movies...'
-                        : 'Search unranked items...'
+                        : mode === 'anime'
+                          ? 'Search anime...'
+                          : 'Search unranked items...'
                   }
                   value={query}
                   onChange={(e) =>
@@ -1879,6 +1940,61 @@ if (overId === "trash-drop-zone") {
                     <span className="csv-format">
                       movie name + image link
                     </span>
+                  </div>
+                </div>
+              )}
+
+              {mode === 'anime' && (
+                <div className="import-games">
+                  <div className="import-games-header">
+                    <div>
+                      <h3>Import Anime</h3>
+                      <p>Add your completed and watching anime from a MyAnimeList profile.</p>
+                    </div>
+                    <Sparkles aria-hidden="true" />
+                  </div>
+
+                  <div className="import-option steam-option">
+                    <div className="import-option-header">
+                      <div className="import-option-icon"><Clapperboard size={19} /></div>
+                      <div>
+                        <h4>MyAnimeList profile</h4>
+                        <p>Paste a profile URL or username</p>
+                      </div>
+                    </div>
+                    <div className="steam-import-form">
+                      <input
+                        value={myAnimeProfile}
+                        onChange={(event) => {
+                          setMyAnimeProfile(event.target.value)
+                          setMyAnimeError('')
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' && !event.nativeEvent.isComposing && event.keyCode !== 229) importMyAnimeList()
+                        }}
+                        placeholder="MyAnimeList username or profile URL"
+                        aria-label="MyAnimeList username or profile URL"
+                      />
+                      <button onClick={importMyAnimeList} disabled={myAnimeLoading || !myAnimeProfile.trim()}>
+                        {myAnimeLoading ? 'Importing...' : 'Import anime'}
+                      </button>
+                    </div>
+                    {myAnimeError && <p className="steam-error">{myAnimeError}</p>}
+                  </div>
+
+                  <div className="import-option csv-option">
+                    <div className="import-option-header">
+                      <div className="import-option-icon"><Upload size={19} /></div>
+                      <div>
+                        <h4>CSV file</h4>
+                        <p>CSV import is ready to connect</p>
+                      </div>
+                    </div>
+                    <button className="csv-upload-button" type="button" disabled>
+                      <Upload size={17} />
+                      Choose CSV file
+                    </button>
+                    <span className="csv-format">Anime CSV support coming soon</span>
                   </div>
                 </div>
               )}
