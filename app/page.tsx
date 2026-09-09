@@ -779,15 +779,25 @@ if (overId === "trash-drop-zone") {
 
   const importMyAnimeList = async () => {
     setMyAnimeError('')
-    const username = myAnimeProfile.trim().replace(/^https?:\/\/myanimelist\.net\/profile\//i, '').replace(/\/$/, '')
-    if (!username) return
+    const rawProfile = myAnimeProfile.trim()
+    const username = rawProfile
+      .replace(/^(?:https?:\/\/)?(?:www\.)?myanimelist\.net\/(?:animelist|profile)\//i, '')
+      .split(/[/?#]/)[0]
+      .trim()
+    if (!username) {
+      setMyAnimeError('Enter a MyAnimeList username or an animelist profile URL.')
+      return
+    }
 
     setMyAnimeLoading(true)
     try {
       const response = await fetch(`/api/myanimelist/anime?username=${encodeURIComponent(username)}`)
       const data = await response.json()
       if (!response.ok) throw new Error(data.message || 'MyAnimeList import failed.')
-      setAnime((current) => [...current, ...data.items])
+      setAnime((current) => {
+        const existingIds = new Set(current.map((item) => item.id))
+        return [...current, ...data.items.filter((item: Item) => !existingIds.has(item.id))]
+      })
     } catch (error) {
       setMyAnimeError(error instanceof Error ? error.message : 'MyAnimeList import failed.')
     } finally {
