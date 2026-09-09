@@ -830,12 +830,7 @@ if (overId === "trash-drop-zone") {
       
       const steamGames: Item[] = data.items;
 
-      setImages(steamGames);
-      console.log("Steam games:", data.items);
-  
-      // Burada mevcut unranked item state'ine ekleyeceğiz.
-      // Örneğin:
-      // setItems(prev => [...prev, ...data.items]);
+      setImages((prev) => [...prev, ...steamGames]);
   
     } catch (error) {
       console.error(error);
@@ -1362,11 +1357,11 @@ if (overId === "trash-drop-zone") {
               item !== null
           )
 
-      if (mode === 'movie') {
-        setMovies(imported)
-      } else {
-        setImages(imported)
-      }
+          if (mode === 'movie') {
+            setMovies((prev) => [...prev, ...imported])
+          } else {
+            setImages((prev) => [...prev, ...imported])
+          }
     }
 
     reader.readAsText(file)
