@@ -497,6 +497,12 @@ button { cursor: pointer; }
 .item-delete-button:hover { background: #d84c4c; transform: scale(1.08); }
 .item-delete-button:active { transform: scale(.94); }
 .item-delete-button svg { width: 14px; height: 14px; stroke-width: 2.5; }
+.insertion-shadow { pointer-events: none; flex: 0 0 auto; border: 1.5px dashed #9bb329; background: linear-gradient(135deg, rgba(215, 243, 95, .22), rgba(215, 243, 95, .06)); color: #7c9516; box-shadow: 0 0 0 3px rgba(215, 243, 95, .1), 0 8px 18px rgba(110, 132, 28, .12); animation: insertion-pulse 1.2s ease-in-out infinite; }
+.insertion-shadow.text-item { min-width: 78px; height: 62px; }
+.insertion-shadow.image-item { width: 90px; height: 120px; }
+.insertion-shadow span { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+@keyframes insertion-pulse { 0%, 100% { opacity: .58; transform: scale(.98); } 50% { opacity: 1; transform: scale(1); } }
+.app.dark .insertion-shadow { border-color: #d7f35f; background: linear-gradient(135deg, rgba(215, 243, 95, .2), rgba(215, 243, 95, .05)); color: #d7f35f; box-shadow: 0 0 0 3px rgba(215, 243, 95, .09), 0 8px 22px rgba(0, 0, 0, .24); }
 .text-item { background: #fff; border: 1px solid #e6e6df; border-radius: 8px; min-width: 78px; height: 62px; padding: 8px; display: grid; place-items: center; text-align: center; font-size: 11px; font-weight: 700; color: #363b36; box-shadow: 0 2px 5px #22221808; }.image-item { width: 90px; height: 120px;   overflow: hidden; box-shadow: 0 2px 6px #22221816; }.image-item img { width: 100%; height: 100%; object-fit: cover; }.item-pool { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0; min-height: 78px; }.search-box { display: flex; align-items: center; gap: 8px; border: 1px solid #e1e2dc; border-radius: 8px; background: #fafaf8; padding: 8px 10px; margin-top: 16px; color: #8b9087; }.search-box svg { width: 15px; }.search-box input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: #1b1d1c; font-size: 12px; }
 /*.tier-drop-target {
   outline: none;

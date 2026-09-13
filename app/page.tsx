@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import {
   DndContext,
   DragEndEvent,
+  DragOverEvent,
   DragOverlay,
   PointerSensor,
   useDroppable,
@@ -276,6 +277,7 @@ export default function Page() {
 
   const [query, setQuery] = useState('')
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [insertionPreview, setInsertionPreview] = useState<{ tierId: string; index: number } | null>(null)
 
   const textRef = useRef<HTMLInputElement>(null)
   const csvRef = useRef<HTMLInputElement>(null)
@@ -348,6 +350,42 @@ export default function Page() {
    */
   function handleDragStart(event: any) {
     setActiveId(String(event.active.id))
+    setInsertionPreview(null)
+  }
+
+  function handleDragOver(event: DragOverEvent) {
+    const { active, over } = event
+    if (!over || tiers.some((tier) => tier.id === String(active.id))) {
+      setInsertionPreview(null)
+      return
+    }
+
+    const overId = String(over.id)
+    const currentItems = visibleItems
+    const dragged = currentItems.find((item) => item.id === String(active.id))
+    if (!dragged) return
+
+    if (overId.startsWith('tier-drop-')) {
+      const tierId = overId.replace('tier-drop-', '')
+      setInsertionPreview({
+        tierId,
+        index: currentItems.filter((item) => item.tierId === tierId).length,
+      })
+      return
+    }
+
+    const overItem = currentItems.find((item) => item.id === overId)
+    if (!overItem || overItem.tierId === null) {
+      setInsertionPreview(null)
+      return
+    }
+
+    const tierItems = currentItems.filter((item) => item.tierId === overItem.tierId)
+    const overIndex = tierItems.findIndex((item) => item.id === overId)
+    const translatedRect = active.rect.current.translated
+    const pointerX = translatedRect ? translatedRect.left + translatedRect.width / 2 : over.rect.left
+    const insertAfter = pointerX > over.rect.left + over.rect.width / 2
+    setInsertionPreview({ tierId: overItem.tierId, index: overIndex + (insertAfter ? 1 : 0) })
   }
 
   /*
@@ -357,6 +395,7 @@ export default function Page() {
    */
   function handleDragCancel() {
     setActiveId(null)
+    setInsertionPreview(null)
   }
 
   /*
@@ -368,6 +407,7 @@ export default function Page() {
     const { active, over } = event
 
     setActiveId(null)
+    setInsertionPreview(null)
 
     if (!over) {
       return
@@ -1404,10 +1444,11 @@ if (overId === "trash-drop-zone") {
       collisionDetection={
         collisionDetectionStrategy
       }
-      onDragStart={
-        handleDragStart
-      }
-      onDragCancel={
+  onDragStart={
+  handleDragStart
+  }
+  onDragOver={handleDragOver}
+  onDragCancel={
         handleDragCancel
       }
       onDragEnd={
@@ -1619,8 +1660,10 @@ if (overId === "trash-drop-zone") {
                   setTiers
                   }
                   onRemove={() => removeTier(tier.id)}
-                  onDeleteItem={deleteItem}
-                      />
+  onDeleteItem={deleteItem}
+  insertionPreview={insertionPreview}
+  activeId={activeId}
+  />
                     )
                   )}
                 </SortableContext>
@@ -2107,6 +2150,8 @@ function TierRow({
   setTiers,
   onRemove,
   onDeleteItem,
+  insertionPreview,
+  activeId,
   }: {
   tier: Tier
   items: Item[]
@@ -2115,6 +2160,8 @@ function TierRow({
   >
   onRemove: () => void
   onDeleteItem: (itemId: string) => void
+  insertionPreview: { tierId: string; index: number } | null
+  activeId: string | null
   }) {
   const {
     attributes,
@@ -2287,17 +2334,24 @@ function TierRow({
               horizontalListSortingStrategy
             }
           >
-            {tierItems.map(
-              (item) => (
-                  <ItemCard
-                    key={item.id}
-                    item={item}
-                    mode={item.image ? 'image' : 'text'}
-                    onDelete={onDeleteItem}
-                  />
-              )
-            )}
+            {tierItems.flatMap((item, index) => {
+              const shadow = insertionPreview?.tierId === tier.id && insertionPreview.index === index && activeId !== item.id
+              return [
+                ...(shadow ? [<InsertionShadow key={`shadow-${tier.id}-${index}`} item={item} />] : []),
+                <ItemCard
+                  key={item.id}
+                  item={item}
+                  mode={item.image ? 'image' : 'text'}
+                  onDelete={onDeleteItem}
+                />,
+              ]
+            })}
+            {insertionPreview?.tierId === tier.id && insertionPreview.index >= tierItems.length && activeId ? (
+              <InsertionShadow key={`shadow-${tier.id}-end`} item={tierItems[tierItems.length - 1]} />
+            ) : null}
           </SortableContext>
+        ) : insertionPreview?.tierId === tier.id && activeId ? (
+          <InsertionShadow key={`shadow-${tier.id}-empty`} />
         ) : (
           <span className="drop-hint">
             Drop items here
@@ -2308,6 +2362,14 @@ function TierRow({
   )
 }
 
+
+function InsertionShadow({ item }: { item?: Item }) {
+  return (
+    <div className={`item-card insertion-shadow ${item?.image ? 'image-item' : 'text-item'}`} aria-hidden="true">
+      <span>{item?.image ? '' : 'Drop here'}</span>
+    </div>
+  )
+}
 
 function ItemCard({
   item,
