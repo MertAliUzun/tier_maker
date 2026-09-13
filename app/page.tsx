@@ -338,8 +338,14 @@ export default function Page() {
 
     if (pointerCollisions.length > 0) {
       const mostSpecificCollision = [...pointerCollisions].sort((a, b) => {
-        const aRect = args.droppableContainers.get(a.id)?.rect.current
-        const bRect = args.droppableContainers.get(b.id)?.rect.current
+        const aContainer = Array.from(args.droppableContainers).find(
+          (container) => String(container.id) === String(a.id)
+        )
+        const bContainer = Array.from(args.droppableContainers).find(
+          (container) => String(container.id) === String(b.id)
+        )
+        const aRect = aContainer?.rect.current
+        const bRect = bContainer?.rect.current
         const aArea = aRect ? aRect.width * aRect.height : Number.POSITIVE_INFINITY
         const bArea = bRect ? bRect.width * bRect.height : Number.POSITIVE_INFINITY
         return aArea - bArea
