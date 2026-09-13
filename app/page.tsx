@@ -365,11 +365,13 @@ export default function Page() {
     const dragged = currentItems.find((item) => item.id === String(active.id))
     if (!dragged) return
 
+    const itemsWithoutDragged = currentItems.filter((item) => item.id !== dragged.id)
+
     if (overId.startsWith('tier-drop-')) {
       const tierId = overId.replace('tier-drop-', '')
       setInsertionPreview({
         tierId,
-        index: currentItems.filter((item) => item.tierId === tierId).length,
+        index: itemsWithoutDragged.filter((item) => item.tierId === tierId).length,
       })
       return
     }
@@ -380,7 +382,7 @@ export default function Page() {
       return
     }
 
-    const tierItems = currentItems.filter((item) => item.tierId === overItem.tierId)
+    const tierItems = itemsWithoutDragged.filter((item) => item.tierId === overItem.tierId)
     const overIndex = tierItems.findIndex((item) => item.id === overId)
     const translatedRect = active.rect.current.translated
     const pointerX = translatedRect ? translatedRect.left + translatedRect.width / 2 : over.rect.left
@@ -2190,11 +2192,11 @@ function TierRow({
     id: `tier-drop-${tier.id}`,
   })
 
-  const tierItems =
-    items.filter(
-      (item) =>
-        item.tierId === tier.id
-    )
+  const activeItem = activeId ? items.find((item) => item.id === activeId) : undefined
+  const tierItems = items.filter(
+  (item) =>
+  item.tierId === tier.id && item.id !== activeId
+  )
 
   const rowStyle = {
     transform:
@@ -2337,7 +2339,7 @@ function TierRow({
             {tierItems.flatMap((item, index) => {
               const shadow = insertionPreview?.tierId === tier.id && insertionPreview.index === index && activeId !== item.id
               return [
-                ...(shadow ? [<InsertionShadow key={`shadow-${tier.id}-${index}`} item={item} />] : []),
+                ...(shadow ? [<InsertionShadow key={`shadow-${tier.id}-${index}`} item={activeItem} />] : []),
                 <ItemCard
                   key={item.id}
                   item={item}
@@ -2347,11 +2349,11 @@ function TierRow({
               ]
             })}
             {insertionPreview?.tierId === tier.id && insertionPreview.index >= tierItems.length && activeId ? (
-              <InsertionShadow key={`shadow-${tier.id}-end`} item={tierItems[tierItems.length - 1]} />
+              <InsertionShadow key={`shadow-${tier.id}-end`} item={activeItem} />
             ) : null}
           </SortableContext>
         ) : insertionPreview?.tierId === tier.id && activeId ? (
-          <InsertionShadow key={`shadow-${tier.id}-empty`} />
+          <InsertionShadow key={`shadow-${tier.id}-empty`} item={activeItem} />
         ) : (
           <span className="drop-hint">
             Drop items here
@@ -2366,7 +2368,7 @@ function TierRow({
 function InsertionShadow({ item }: { item?: Item }) {
   return (
     <div className={`item-card insertion-shadow ${item?.image ? 'image-item' : 'text-item'}`} aria-hidden="true">
-      <span>{item?.image ? '' : 'Drop here'}</span>
+      {item?.image ? <img src={item.image} alt="" /> : null}
     </div>
   )
 }
