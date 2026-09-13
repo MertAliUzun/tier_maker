@@ -417,6 +417,7 @@ export default function Page() {
 
     const activeId = String(active.id)
     const overId = String(over.id)
+    const trackedInsertion = insertionPreview
 
     // =======================================================
 // DROP TO TRASH
@@ -553,23 +554,17 @@ if (overId === "trash-drop-zone") {
 
         moved.tierId = targetTierId
 
-        let insertIndex = next.length
-
-        for (
-          let i = next.length - 1;
-          i >= 0;
-          i--
-        ) {
-          if (
-            next[i].tierId === targetTierId
-          ) {
-            insertIndex = i + 1
-            break
-          }
-        }
+        const targetItems = next.filter((item) => item.tierId === targetTierId)
+        const trackedIndex = trackedInsertion?.tierId === targetTierId
+          ? Math.min(trackedInsertion.index, targetItems.length)
+          : targetItems.length
+        const anchor = targetItems[trackedIndex]
+        const insertIndex = anchor
+          ? next.findIndex((item) => item.id === anchor.id)
+          : next.length
 
         next.splice(
-          insertIndex,
+          insertIndex === -1 ? next.length : insertIndex,
           0,
           moved
         )
@@ -592,6 +587,10 @@ if (overId === "trash-drop-zone") {
       }
 
       const targetItem = current[overIndex]
+      const trackedTierId = trackedInsertion?.tierId
+      const trackedIndex = trackedTierId
+        ? Math.max(0, trackedInsertion?.index ?? 0)
+        : null
 
       /*
        * Kendi üzerine bırakıldı.
@@ -599,6 +598,19 @@ if (overId === "trash-drop-zone") {
 
       if (activeId === targetItem.id) {
         return current
+      }
+
+      if (trackedTierId) {
+        const next = current.filter((item) => item.id !== activeId)
+        const moved = { ...draggedItem, tierId: trackedTierId }
+        const targetItems = next.filter((item) => item.tierId === trackedTierId)
+        const safeIndex = Math.min(trackedIndex ?? targetItems.length, targetItems.length)
+        const anchor = targetItems[safeIndex]
+        const insertIndex = anchor
+          ? next.findIndex((item) => item.id === anchor.id)
+          : next.length
+        next.splice(insertIndex === -1 ? next.length : insertIndex, 0, moved)
+        return next
       }
 
       /*
