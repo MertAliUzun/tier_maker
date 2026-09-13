@@ -110,6 +110,7 @@ const initialItems: Item[] = [
   const initialAnime: Item[] = []
 
 export default function Page() {
+  const [isMounted, setIsMounted] = useState(false)
   const [mode, setMode] = useState<Mode>('game')
   const [dark, setDark] = useState(true)
   const [steamProfileUrl, setSteamProfileUrl] = useState("");
@@ -238,6 +239,10 @@ export default function Page() {
   })
 
   useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  useEffect(() => {
     localStorage.setItem(
       'tierly-tiers-by-mode',
       JSON.stringify(tiersByMode)
@@ -304,6 +309,10 @@ export default function Page() {
         .toLowerCase()
         .includes(query.toLowerCase())
   )
+
+  function deleteItem(itemId: string) {
+    setCurrentItems((current) => current.filter((item) => item.id !== itemId))
+  }
 
   function setCurrentItems(
     updater: (current: Item[]) => Item[]
@@ -1385,9 +1394,13 @@ if (overId === "trash-drop-zone") {
         item.id === activeId
     )
 
+  if (!isMounted) {
+    return null
+  }
+
   return (
-    <DndContext
-      sensors={sensors}
+  <DndContext
+  sensors={sensors}
       collisionDetection={
         collisionDetectionStrategy
       }
@@ -1603,9 +1616,10 @@ if (overId === "trash-drop-zone") {
                         tier={tier}
                         items={visibleItems}
                         setTiers={
-                          setTiers
-                        }
-                        onRemove={() => removeTier(tier.id)}
+                  setTiers
+                  }
+                  onRemove={() => removeTier(tier.id)}
+                  onDeleteItem={deleteItem}
                       />
                     )
                   )}
@@ -1706,15 +1720,12 @@ if (overId === "trash-drop-zone") {
                 >
                   {unranked.map(
                     (item) => (
-                      <ItemCard
-                        key={item.id}
-                        item={item}
-                        mode={
-                          mode === 'text'
-                            ? 'text'
-                            : 'image'
-                        }
-                      />
+              <ItemCard
+                key={item.id}
+                item={item}
+                mode={item.image ? 'image' : 'text'}
+                onDelete={deleteItem}
+              />
                     )
                   )}
                 </SortableContext>
@@ -2095,14 +2106,16 @@ function TierRow({
   items,
   setTiers,
   onRemove,
-}: {
+  onDeleteItem,
+  }: {
   tier: Tier
   items: Item[]
   setTiers: React.Dispatch<
     React.SetStateAction<Tier[]>
   >
   onRemove: () => void
-}) {
+  onDeleteItem: (itemId: string) => void
+  }) {
   const {
     attributes,
     listeners,
@@ -2276,15 +2289,12 @@ function TierRow({
           >
             {tierItems.map(
               (item) => (
-                <ItemCard
-                  key={item.id}
-                  item={item}
-                  mode={
-                    item.image
-                      ? 'image'
-                      : 'text'
-                  }
-                />
+                  <ItemCard
+                    key={item.id}
+                    item={item}
+                    mode={item.image ? 'image' : 'text'}
+                    onDelete={onDeleteItem}
+                  />
               )
             )}
           </SortableContext>
@@ -2302,9 +2312,11 @@ function TierRow({
 function ItemCard({
   item,
   mode,
+  onDelete,
 }: {
   item: Item
   mode: 'text' | 'image'
+  onDelete: (itemId: string) => void
 }) {
   const {
     attributes,
@@ -2344,11 +2356,26 @@ function ItemCard({
       }`}
     >
       {item.image && !imageError ? (
-        <img
-          src={item.image}
-          alt={item.label}
-          onError={() => setImageError(true)}
-        />
+        <>
+          <img
+            src={item.image}
+            alt={item.label}
+            onError={() => setImageError(true)}
+          />
+          <button
+            type="button"
+            className="item-delete-button"
+            aria-label={`Delete ${item.label}`}
+            onPointerDown={(event) => event.stopPropagation()}
+            onMouseDown={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              event.stopPropagation()
+              onDelete(item.id)
+            }}
+          >
+            <X aria-hidden="true" />
+          </button>
+        </>
       ) : (
         <span>
           {item.label}
