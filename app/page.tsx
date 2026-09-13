@@ -337,7 +337,15 @@ export default function Page() {
     const pointerCollisions = pointerWithin(args)
 
     if (pointerCollisions.length > 0) {
-      return pointerCollisions
+      const mostSpecificCollision = [...pointerCollisions].sort((a, b) => {
+        const aRect = args.droppableContainers.getEnabled(a.id)?.rect.current
+        const bRect = args.droppableContainers.getEnabled(b.id)?.rect.current
+        const aArea = aRect ? aRect.width * aRect.height : Number.POSITIVE_INFINITY
+        const bArea = bRect ? bRect.width * bRect.height : Number.POSITIVE_INFINITY
+        return aArea - bArea
+      })[0]
+
+      return mostSpecificCollision ? [mostSpecificCollision] : pointerCollisions
     }
 
     return closestCenter(args)
