@@ -2355,32 +2355,30 @@ function ItemCard({
           : 'text-item'
       }`}
     >
-      {item.image && !imageError ? (
-        <>
-          <img
-            src={item.image}
-            alt={item.label}
-            onError={() => setImageError(true)}
-          />
-          <button
-            type="button"
-            className="item-delete-button"
-            aria-label={`Delete ${item.label}`}
-            onPointerDown={(event) => event.stopPropagation()}
-            onMouseDown={(event) => event.stopPropagation()}
-            onClick={(event) => {
-              event.stopPropagation()
-              onDelete(item.id)
-            }}
-          >
-            <X aria-hidden="true" />
-          </button>
-        </>
-      ) : (
-        <span>
-          {item.label}
-        </span>
-      )}
+  {item.image && !imageError ? (
+  <img
+  src={item.image}
+  alt={item.label}
+  onError={() => setImageError(true)}
+  />
+  ) : (
+  <span>
+  {item.label}
+  </span>
+  )}
+  <button
+  type="button"
+  className="item-delete-button"
+  aria-label={`Delete ${item.label}`}
+  onPointerDown={(event) => event.stopPropagation()}
+  onMouseDown={(event) => event.stopPropagation()}
+  onClick={(event) => {
+  event.stopPropagation()
+  onDelete(item.id)
+  }}
+  >
+  <X aria-hidden="true" />
+  </button>
     </div>
   )
 }
