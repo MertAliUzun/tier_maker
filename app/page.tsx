@@ -305,6 +305,10 @@ export default function Page() {
         .includes(query.toLowerCase())
   )
 
+  function deleteItem(itemId: string) {
+    setCurrentItems((current) => current.filter((item) => item.id !== itemId))
+  }
+
   function setCurrentItems(
     updater: (current: Item[]) => Item[]
   ) {
@@ -1699,15 +1703,12 @@ if (overId === "trash-drop-zone") {
                 >
                   {unranked.map(
                     (item) => (
-                      <ItemCard
-                        key={item.id}
-                        item={item}
-                        mode={
-                          mode === 'text'
-                            ? 'text'
-                            : 'image'
-                        }
-                      />
+              <ItemCard
+                key={item.id}
+                item={item}
+                mode={item.image ? 'image' : 'text'}
+                onDelete={deleteItem}
+              />
                     )
                   )}
                 </SortableContext>
@@ -2269,15 +2270,12 @@ function TierRow({
           >
             {tierItems.map(
               (item) => (
-                <ItemCard
-                  key={item.id}
-                  item={item}
-                  mode={
-                    item.image
-                      ? 'image'
-                      : 'text'
-                  }
-                />
+                  <ItemCard
+                    key={item.id}
+                    item={item}
+                    mode={item.image ? 'image' : 'text'}
+                    onDelete={deleteItem}
+                  />
               )
             )}
           </SortableContext>
@@ -2295,9 +2293,11 @@ function TierRow({
 function ItemCard({
   item,
   mode,
+  onDelete,
 }: {
   item: Item
   mode: 'text' | 'image'
+  onDelete: (itemId: string) => void
 }) {
   const {
     attributes,
@@ -2337,11 +2337,26 @@ function ItemCard({
       }`}
     >
       {item.image && !imageError ? (
-        <img
-          src={item.image}
-          alt={item.label}
-          onError={() => setImageError(true)}
-        />
+        <>
+          <img
+            src={item.image}
+            alt={item.label}
+            onError={() => setImageError(true)}
+          />
+          <button
+            type="button"
+            className="item-delete-button"
+            aria-label={`Delete ${item.label}`}
+            onPointerDown={(event) => event.stopPropagation()}
+            onMouseDown={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              event.stopPropagation()
+              onDelete(item.id)
+            }}
+          >
+            <X aria-hidden="true" />
+          </button>
+        </>
       ) : (
         <span>
           {item.label}
