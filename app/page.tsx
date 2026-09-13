@@ -302,6 +302,12 @@ export default function Page() {
     (item) => item.tierId !== null
   ).length
 
+  const rankedItems = visibleItems.filter(
+    (item) =>
+      item.tierId !== null &&
+      item.label.toLowerCase().includes(query.toLowerCase())
+  )
+
   const unranked = visibleItems.filter(
     (item) =>
       item.tierId === null &&
@@ -1593,6 +1599,24 @@ if (overId === "trash-drop-zone") {
                       
                 </div>
 
+                <div className="search-box ranked-search-box">
+                  <Search aria-hidden="true" />
+                  <input
+                    aria-label={`Search ${modeLabel.toLowerCase()} ranked items`}
+                    placeholder={
+                      mode === 'game'
+                        ? 'Search ranked games...'
+                        : mode === 'movie'
+                          ? 'Search ranked movies...'
+                          : mode === 'anime'
+                            ? 'Search ranked anime...'
+                            : 'Search ranked items...'
+                    }
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                  />
+                </div>
+
                 <span className="count-pill">
                   {ranked} ranked{' '}
                   <span>/</span>{' '}
@@ -1614,7 +1638,7 @@ if (overId === "trash-drop-zone") {
                       <TierRow
                         key={tier.id}
                         tier={tier}
-                        items={visibleItems}
+                        items={rankedItems}
                         setTiers={
                   setTiers
                   }
