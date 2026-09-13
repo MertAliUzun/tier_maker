@@ -2118,6 +2118,8 @@ function TierRow({
   setTiers,
   onRemove,
   onDeleteItem,
+  activeItem,
+  overId,
   }: {
   tier: Tier
   items: Item[]
