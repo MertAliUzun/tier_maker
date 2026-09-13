@@ -338,8 +338,8 @@ export default function Page() {
 
     if (pointerCollisions.length > 0) {
       const mostSpecificCollision = [...pointerCollisions].sort((a, b) => {
-        const aRect = args.droppableContainers.getEnabled(a.id)?.rect.current
-        const bRect = args.droppableContainers.getEnabled(b.id)?.rect.current
+        const aRect = args.droppableContainers.get(a.id)?.rect.current
+        const bRect = args.droppableContainers.get(b.id)?.rect.current
         const aArea = aRect ? aRect.width * aRect.height : Number.POSITIVE_INFINITY
         const bArea = bRect ? bRect.width * bRect.height : Number.POSITIVE_INFINITY
         return aArea - bArea
@@ -723,7 +723,7 @@ if (overId === "trash-drop-zone") {
   
     setIsCapturing(true)
   
-    // UI'ın loading ekranını göstermesine izin ver
+    // UI'ın loading ekran��nı göstermesine izin ver
     await new Promise((resolve) => setTimeout(resolve, 100))
   
     try {
