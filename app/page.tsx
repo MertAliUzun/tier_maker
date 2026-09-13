@@ -336,7 +336,7 @@ export default function Page() {
   ) => {
     const pointerCollisions = pointerWithin(args)
 
-    const itemIds = new Set(currentItems.map((item) => item.id))
+    const itemIds = new Set(visibleItems.map((item) => item.id))
     const itemPointerCollisions = pointerCollisions.filter(
       (collision) => itemIds.has(String(collision.id)) && String(collision.id) !== activeId
     )
