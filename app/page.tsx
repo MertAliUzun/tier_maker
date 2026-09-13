@@ -2304,30 +2304,42 @@ function TierRow({
           >
             {tierItems.map(
               (item) => (
+                <React.Fragment key={item.id}>
+                  {isOver && activeItem?.image && overId === item.id ? (
+                    <PlacementShadow image={activeItem.image} />
+                  ) : null}
                   <ItemCard
-                    key={item.id}
                     item={item}
                     mode={item.image ? 'image' : 'text'}
                     onDelete={onDeleteItem}
                   />
+                </React.Fragment>
               )
             )}
           </SortableContext>
+        ) : isOver && activeItem?.image ? (
+          <PlacementShadow image={activeItem.image} />
         ) : (
           <span className="drop-hint">
             Drop items here
           </span>
         )}
-        {isOver && activeItem?.image && overId === `tier-drop-${tier.id}` ? (
-          <div className="item-placement-shadow" aria-hidden="true">
-            <img src={activeItem.image} alt="" />
-          </div>
+        {isOver && activeItem?.image && overId === `tier-drop-${tier.id}` && tierItems.length > 0 ? (
+          <PlacementShadow image={activeItem.image} />
         ) : null}
       </div>
     </div>
   )
 }
 
+
+function PlacementShadow({ image }: { image: string }) {
+  return (
+    <div className="item-placement-shadow" aria-hidden="true">
+      <img src={image} alt="" />
+    </div>
+  )
+}
 
 function ItemCard({
   item,
