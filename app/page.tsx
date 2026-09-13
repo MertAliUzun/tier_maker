@@ -110,6 +110,7 @@ const initialItems: Item[] = [
   const initialAnime: Item[] = []
 
 export default function Page() {
+  const [isMounted, setIsMounted] = useState(false)
   const [mode, setMode] = useState<Mode>('game')
   const [dark, setDark] = useState(true)
   const [steamProfileUrl, setSteamProfileUrl] = useState("");
@@ -236,6 +237,10 @@ export default function Page() {
       return initialMovies
     }
   })
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   useEffect(() => {
     localStorage.setItem(
@@ -1393,9 +1398,13 @@ if (overId === "trash-drop-zone") {
         item.id === activeId
     )
 
+  if (!isMounted) {
+    return null
+  }
+
   return (
-    <DndContext
-      sensors={sensors}
+  <DndContext
+  sensors={sensors}
       collisionDetection={
         collisionDetectionStrategy
       }
@@ -1611,9 +1620,10 @@ if (overId === "trash-drop-zone") {
                         tier={tier}
                         items={visibleItems}
                         setTiers={
-                          setTiers
-                        }
-                        onRemove={() => removeTier(tier.id)}
+                  setTiers
+                  }
+                  onRemove={() => removeTier(tier.id)}
+                  onDeleteItem={deleteItem}
                       />
                     )
                   )}
@@ -2089,14 +2099,16 @@ function TierRow({
   items,
   setTiers,
   onRemove,
-}: {
+  onDeleteItem,
+  }: {
   tier: Tier
   items: Item[]
   setTiers: React.Dispatch<
     React.SetStateAction<Tier[]>
   >
   onRemove: () => void
-}) {
+  onDeleteItem: (itemId: string) => void
+  }) {
   const {
     attributes,
     listeners,
@@ -2274,7 +2286,7 @@ function TierRow({
                     key={item.id}
                     item={item}
                     mode={item.image ? 'image' : 'text'}
-                    onDelete={deleteItem}
+                    onDelete={onDeleteItem}
                   />
               )
             )}
