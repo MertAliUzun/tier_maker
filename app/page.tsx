@@ -274,7 +274,8 @@ export default function Page() {
     localStorage.setItem('tierly-anime', JSON.stringify(anime))
   }, [anime])
 
-  const [query, setQuery] = useState('')
+  const [rankedQuery, setRankedQuery] = useState('')
+  const [unrankedQuery, setUnrankedQuery] = useState('')
   const [activeId, setActiveId] = useState<string | null>(null)
 
   const textRef = useRef<HTMLInputElement>(null)
@@ -302,12 +303,18 @@ export default function Page() {
     (item) => item.tierId !== null
   ).length
 
+  const rankedItems = visibleItems.filter(
+    (item) =>
+      item.tierId !== null &&
+      item.label.toLowerCase().includes(rankedQuery.toLowerCase())
+  )
+
   const unranked = visibleItems.filter(
     (item) =>
       item.tierId === null &&
       item.label
         .toLowerCase()
-        .includes(query.toLowerCase())
+        .includes(unrankedQuery.toLowerCase())
   )
 
   function deleteItem(itemId: string) {
@@ -1593,6 +1600,24 @@ if (overId === "trash-drop-zone") {
                       
                 </div>
 
+                <div className="search-box ranked-search-box">
+                  <Search aria-hidden="true" />
+                  <input
+                    aria-label={`Search ${modeLabel.toLowerCase()} ranked items`}
+                    placeholder={
+                      mode === 'game'
+                        ? 'Search ranked games...'
+                        : mode === 'movie'
+                          ? 'Search ranked movies...'
+                          : mode === 'anime'
+                            ? 'Search ranked anime...'
+                            : 'Search ranked items...'
+                    }
+                    value={rankedQuery}
+                    onChange={(event) => setRankedQuery(event.target.value)}
+                  />
+                </div>
+
                 <span className="count-pill">
                   {ranked} ranked{' '}
                   <span>/</span>{' '}
@@ -1614,7 +1639,7 @@ if (overId === "trash-drop-zone") {
                       <TierRow
                         key={tier.id}
                         tier={tier}
-                        items={visibleItems}
+                        items={rankedItems}
                         setTiers={
                   setTiers
                   }
@@ -1699,11 +1724,11 @@ if (overId === "trash-drop-zone") {
                           ? 'Search anime...'
                           : 'Search unranked items...'
                   }
-                  value={query}
+                  value={unrankedQuery}
                   onChange={(e) =>
-                    setQuery(
-                      e.target.value
-                    )
+                  setUnrankedQuery(
+                  e.target.value
+                  )
                   }
                 />
               </div>
