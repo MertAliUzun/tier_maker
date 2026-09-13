@@ -274,7 +274,8 @@ export default function Page() {
     localStorage.setItem('tierly-anime', JSON.stringify(anime))
   }, [anime])
 
-  const [query, setQuery] = useState('')
+  const [rankedQuery, setRankedQuery] = useState('')
+  const [unrankedQuery, setUnrankedQuery] = useState('')
   const [activeId, setActiveId] = useState<string | null>(null)
 
   const textRef = useRef<HTMLInputElement>(null)
@@ -305,7 +306,7 @@ export default function Page() {
   const rankedItems = visibleItems.filter(
     (item) =>
       item.tierId !== null &&
-      item.label.toLowerCase().includes(query.toLowerCase())
+      item.label.toLowerCase().includes(rankedQuery.toLowerCase())
   )
 
   const unranked = visibleItems.filter(
@@ -313,7 +314,7 @@ export default function Page() {
       item.tierId === null &&
       item.label
         .toLowerCase()
-        .includes(query.toLowerCase())
+        .includes(unrankedQuery.toLowerCase())
   )
 
   function deleteItem(itemId: string) {
@@ -1612,8 +1613,8 @@ if (overId === "trash-drop-zone") {
                             ? 'Search ranked anime...'
                             : 'Search ranked items...'
                     }
-                    value={query}
-                    onChange={(event) => setQuery(event.target.value)}
+                    value={rankedQuery}
+                    onChange={(event) => setRankedQuery(event.target.value)}
                   />
                 </div>
 
@@ -1723,11 +1724,11 @@ if (overId === "trash-drop-zone") {
                           ? 'Search anime...'
                           : 'Search unranked items...'
                   }
-                  value={query}
+                  value={unrankedQuery}
                   onChange={(e) =>
-                    setQuery(
-                      e.target.value
-                    )
+                  setUnrankedQuery(
+                  e.target.value
+                  )
                   }
                 />
               </div>
