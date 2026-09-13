@@ -336,21 +336,29 @@ export default function Page() {
   ) => {
     const pointerCollisions = pointerWithin(args)
 
-    const itemIds = new Set(visibleItems.map((item) => item.id))
-    const itemPointerCollisions = pointerCollisions.filter(
-      (collision) => itemIds.has(String(collision.id)) && String(collision.id) !== activeId
+    const isItemTarget = (id: string | number) => {
+      const value = String(id)
+      return (
+        value !== activeId &&
+        !value.startsWith('tier-drop-') &&
+        value !== 'trash-drop-zone'
+      )
+    }
+
+    const itemPointerCollisions = pointerCollisions.filter((collision) =>
+      isItemTarget(collision.id)
     )
 
     if (itemPointerCollisions.length > 0) {
-      return itemPointerCollisions
+      return itemPointerCollisions.slice(0, 1)
     }
 
-    const centerCollisions = closestCenter(args).filter(
-      (collision) => itemIds.has(String(collision.id)) && String(collision.id) !== activeId
+    const itemCenterCollisions = closestCenter(args).filter((collision) =>
+      isItemTarget(collision.id)
     )
 
-    if (centerCollisions.length > 0) {
-      return centerCollisions.slice(0, 1)
+    if (itemCenterCollisions.length > 0) {
+      return itemCenterCollisions.slice(0, 1)
     }
 
     return pointerCollisions
