@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import {
   DndContext,
   DragEndEvent,
+  DragOverEvent,
   DragOverlay,
   PointerSensor,
   useDroppable,
@@ -276,6 +277,7 @@ export default function Page() {
 
   const [query, setQuery] = useState('')
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [overId, setOverId] = useState<string | null>(null)
 
   const textRef = useRef<HTMLInputElement>(null)
   const csvRef = useRef<HTMLInputElement>(null)
@@ -357,6 +359,11 @@ export default function Page() {
    */
   function handleDragCancel() {
     setActiveId(null)
+    setOverId(null)
+  }
+
+  function handleDragOver(event: DragOverEvent) {
+    setOverId(event.over ? String(event.over.id) : null)
   }
 
   /*
@@ -368,6 +375,7 @@ export default function Page() {
     const { active, over } = event
 
     setActiveId(null)
+    setOverId(null)
 
     if (!over) {
       return
@@ -1407,6 +1415,7 @@ if (overId === "trash-drop-zone") {
       onDragStart={
         handleDragStart
       }
+      onDragOver={handleDragOver}
       onDragCancel={
         handleDragCancel
       }
@@ -1618,8 +1627,10 @@ if (overId === "trash-drop-zone") {
                         setTiers={
                   setTiers
                   }
-                  onRemove={() => removeTier(tier.id)}
-                  onDeleteItem={deleteItem}
+  onRemove={() => removeTier(tier.id)}
+  onDeleteItem={deleteItem}
+  activeItem={activeItem}
+  overId={overId}
                       />
                     )
                   )}
@@ -2115,6 +2126,8 @@ function TierRow({
   >
   onRemove: () => void
   onDeleteItem: (itemId: string) => void
+  activeItem?: Item
+  overId: string | null
   }) {
   const {
     attributes,
@@ -2275,7 +2288,7 @@ function TierRow({
 
       <div
         ref={setDropRef}
-        className="drop-zone"
+        className={`drop-zone ${isOver && activeItem?.image ? 'drop-zone-active' : ''}`}
       >
         {tierItems.length > 0 ? (
           <SortableContext
@@ -2303,6 +2316,11 @@ function TierRow({
             Drop items here
           </span>
         )}
+        {isOver && activeItem?.image && overId === `tier-drop-${tier.id}` ? (
+          <div className="item-placement-shadow" aria-hidden="true">
+            <img src={activeItem.image} alt="" />
+          </div>
+        ) : null}
       </div>
     </div>
   )
