@@ -1,7 +1,7 @@
 
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import {
   DndContext,
   DragEndEvent,
@@ -2304,7 +2304,7 @@ function TierRow({
           >
             {tierItems.map(
               (item) => (
-                <React.Fragment key={item.id}>
+                <Fragment key={item.id}>
                   {isOver && activeItem?.image && overId === item.id ? (
                     <PlacementShadow image={activeItem.image} />
                   ) : null}
@@ -2313,7 +2313,7 @@ function TierRow({
                     mode={item.image ? 'image' : 'text'}
                     onDelete={onDeleteItem}
                   />
-                </React.Fragment>
+                </Fragment>
               )
             )}
           </SortableContext>
