@@ -336,25 +336,24 @@ export default function Page() {
   ) => {
     const pointerCollisions = pointerWithin(args)
 
-    if (pointerCollisions.length > 0) {
-      const mostSpecificCollision = [...pointerCollisions].sort((a, b) => {
-        const aContainer = Array.from(args.droppableContainers).find(
-          (container) => String(container.id) === String(a.id)
-        )
-        const bContainer = Array.from(args.droppableContainers).find(
-          (container) => String(container.id) === String(b.id)
-        )
-        const aRect = aContainer?.rect.current
-        const bRect = bContainer?.rect.current
-        const aArea = aRect ? aRect.width * aRect.height : Number.POSITIVE_INFINITY
-        const bArea = bRect ? bRect.width * bRect.height : Number.POSITIVE_INFINITY
-        return aArea - bArea
-      })[0]
+    const itemIds = new Set(currentItems.map((item) => item.id))
+    const itemPointerCollisions = pointerCollisions.filter(
+      (collision) => itemIds.has(String(collision.id)) && String(collision.id) !== activeId
+    )
 
-      return mostSpecificCollision ? [mostSpecificCollision] : pointerCollisions
+    if (itemPointerCollisions.length > 0) {
+      return itemPointerCollisions
     }
 
-    return closestCenter(args)
+    const centerCollisions = closestCenter(args).filter(
+      (collision) => itemIds.has(String(collision.id)) && String(collision.id) !== activeId
+    )
+
+    if (centerCollisions.length > 0) {
+      return centerCollisions.slice(0, 1)
+    }
+
+    return pointerCollisions
   }
 
   /*
